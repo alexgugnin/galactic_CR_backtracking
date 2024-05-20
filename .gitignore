@@ -8,6 +8,9 @@ potential_sources/SBGs_under50Mpc.csv:Zone.Identifier
 potential_sources/magnetars.csv:Zone.Identifier
 sim_results/
 trajectories/trajectories_1e3/
+trajectories/trajectories_1e3_1000_rand_seeds/
 trajectories/trajectories_1e4/
 useful_funcs.py:Zone.Identifier
 token.txt
+test.py
+side_checks/useful_funcs.py
