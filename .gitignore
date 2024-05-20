@@ -10,3 +10,4 @@ sim_results/
 trajectories/trajectories_1e3/
 trajectories/trajectories_1e4/
 useful_funcs.py:Zone.Identifier
+token.txt
