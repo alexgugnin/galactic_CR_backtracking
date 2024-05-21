@@ -14,3 +14,5 @@ useful_funcs.py:Zone.Identifier
 token.txt
 test.py
 side_checks/useful_funcs.py
+side_checks/auger+TA_combined.dat
+side_checks/trajectories_1e3_1000_rand_seeds/

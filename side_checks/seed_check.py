@@ -33,14 +33,14 @@ def magFieldSetup(seed):
     B.randomStriated(seed)
     B.randomTurbulent(seed)
 
-    return B
+    return B, R
 
 if __name__ == '__main__':
     '''
     Creating events list
     '''
     events = []
-    with open('data/auger+TA_combined.dat', 'r') as infile:
+    with open('auger+TA_combined.dat', 'r') as infile:
         for line in infile:
             if line.split()[0] == '#': continue
             temp_event = line.split()
@@ -50,20 +50,20 @@ if __name__ == '__main__':
     Sim for 4 particles for 1 event(third one)
     '''
     #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
-    particles = [- nucleusId(1,1)]
+    particles = [- nucleusId(52,26)]
     events_triplet = [22, 23, 30]
     sigma_energy = (0.07, 0.15)
     sigma_dir = (0.002, 0.003) #1, 1.5 degree directional uncertainty
-    seeds = np.arange(0, 2**32, round((2**32 - 1)/100))
+    seeds = [int(i) for i in np.arange(0, 2**30, round((2**30 - 1)/100), dtype='uint32').tolist()]
 
     for seed in tqdm(seeds):
         for event_idx in events_triplet:
             # simulation setup
             sim = ModuleList()
-            B = magFieldSetup(seed)
+            B, R = magFieldSetup(seed)
             sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
             sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
-            output = MyTrajectoryOutput(f'trajectories/trajectories_1e3_1000_rand_seeds/H/traj_PA+TA_Fe_{event_idx}_event_{seed}_seed.txt')
+            output = MyTrajectoryOutput(f'trajectories_1e3_1000_rand_seeds/Fe/traj_PA+TA_Fe_{event_idx}_event_{seed}_seed.txt')
             sim.add(output)
             NUM_OF_SIMS = 1000
 
