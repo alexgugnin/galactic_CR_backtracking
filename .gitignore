@@ -16,3 +16,6 @@ test.py
 side_checks/useful_funcs.py
 side_checks/auger+TA_combined.dat
 side_checks/trajectories_1e3_1000_rand_seeds/
+traj_PA+TA_C_30_event_10737418_seed.txt
+traj_PA+TA_Fe_22_event_10737418_seed.txt
+traj_PA+TA_Fe_23_event_10737418_seed.txt
