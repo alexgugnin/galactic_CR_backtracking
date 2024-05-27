@@ -125,7 +125,7 @@ def calculate_kde(data, object_cords) -> float:
 
 
 if __name__ == '__main__':
-    path = 'trajectories_1e3_1000_rand_seeds/Fe/'
+    path = 'trajectories_1e3_1000_rand_seeds/H/'
     file_list = glob.glob(f'{path}*.txt')
     objects_list = {
         "sgr": [0, 12.5*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.5, 12.5*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), 12.5*np.sin(0.77*np.pi/180)],
@@ -153,4 +153,4 @@ if __name__ == '__main__':
             temp_df = pd.DataFrame(temp_dict)
             result = pd.concat([result, temp_df], ignore_index = True)
             result.reset_index()
-    result.to_csv(f"{path}results_for_{path.split('/')[1]}.csv")
+    result.to_csv(f"{path}results_for_{path.split('/')[1]}_rotated.csv")

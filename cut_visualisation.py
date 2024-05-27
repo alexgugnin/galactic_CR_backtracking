@@ -133,7 +133,7 @@ def plot3D_from_pandas(data, data_cut):
     plt.show()
 
 if __name__ == '__main__':
-    data = np.genfromtxt('traj_PA+TA_Fe_22_event_10737418_seed.txt', unpack=True, skip_footer=1)
+    data = np.genfromtxt('traj_PA+TA_Fe_23_event_10737418_seed.txt', unpack=True, skip_footer=1)
     sgr_cords = [0, 12.5*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.5, 12.5*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), 12.5*np.sin(0.77*np.pi/180)]
     data_cut = makeCut(data, sgr_cords)
     plot3D_from_pandas(data, data_cut)
