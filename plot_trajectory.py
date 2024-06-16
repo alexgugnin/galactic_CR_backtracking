@@ -32,16 +32,15 @@ def plot2DProjection(data, axis) -> None:
 
     plt.show()
 
-def plotAll2DProjections(data) -> None:
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16, 9))
+def plotAll2DProjections(data, title:str = '', fname:str = '') -> None:
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16, 4))
 
-    fig.suptitle("All three projections for the simulated CRs (Z = 1, 2, 6, 26)")
+    fig.suptitle(title, y=1)
     I,X,Y,Z = data
     projections = [ax1, ax2, ax3]
     for projection, axis in enumerate([(1,2), (2,3), (1,3)]):
-        #plotting sims
         for i in np.unique(I):
-            projections[projection].plot([I,X,Y,Z][axis[0]][I == i], [I,X,Y,Z][axis[1]][I == i], lw=1, alpha=1)
+            projections[projection].plot([I,X,Y,Z][axis[0]][I == i], [I,X,Y,Z][axis[1]][I == i], lw=0.1, alpha=0.3, color='green')
         # plot Galactic center
         projections[projection].scatter(0,0, marker='o', color='black', alpha=0.5)
         # plot Earth
@@ -49,7 +48,7 @@ def plotAll2DProjections(data) -> None:
         projections[projection].scatter(earth_cords[axis[0]], earth_cords[axis[1]], marker='P', color='blue')
         #Plot SGR 1900+14
         sgr_cords = [0, 12.5*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.5, 12.5*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), 12.5*np.sin(0.77*np.pi/180)]
-        projections[projection].scatter(sgr_cords[axis[0]], sgr_cords[axis[1]], marker='+', c='red', s=70) #43.02 0.77 12.5±1.7
+        projections[projection].scatter(sgr_cords[axis[0]], sgr_cords[axis[1]], marker='+', c='red', s=80) #43.02 0.77 12.5±1.7
         #Plot GRS 1915+105
         grs_cords = [0, 8.6*np.cos(45.37*np.pi/180)*np.cos(-0.22*np.pi/180) - 8.5, 8.6*np.sin(45.37*np.pi/180)*np.cos(-0.22*np.pi/180), 8.6*np.sin(-0.22*np.pi/180)]
         projections[projection].scatter(grs_cords[axis[0]], grs_cords[axis[1]], marker='+', c='green', s=70) #45.37 -0.22 8.6+2.0-1.6
@@ -67,21 +66,21 @@ def plotAll2DProjections(data) -> None:
         #Legend
         from matplotlib.lines import Line2D
         legend_elements = [
-                            Line2D([0], [0], marker='+', color='red', label='SGR 1900+14', markerfacecolor='red', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='+', color='green', label='GRS 1915+105', markerfacecolor='green', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='+', color='purple', label='SS 433', markerfacecolor='purple', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='+', color='magenta', label='NGC 6760', markerfacecolor='magenta', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='P', color='blue', label='Earth', markerfacecolor='blue', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='o', color='black', label='Galaxy Center', markerfacecolor='black', linestyle='', markersize=8),
-                            Line2D([0], [0], lw=1, color='blue', label='H'),
-                            #Line2D([0], [0], lw=1, color='blue', label='$\overline{H}$'),
-                            Line2D([0], [0], lw=1, color='orange', label='He'),
-                            Line2D([0], [0], lw=1, color='green', label='C'),
-                            Line2D([0], [0], lw=1, color='red', label='F'),
-                            ]
-        fig.legend(handles=legend_elements, loc='upper right')
+                          Line2D([0], [0], marker='+', color='red', label='SGR 1900+14', markerfacecolor='red', linestyle='', markersize=8),
+                          Line2D([0], [0], marker='+', color='green', label='GRS 1915+105', markerfacecolor='green', linestyle='', markersize=8),
+                          Line2D([0], [0], marker='+', color='purple', label='SS 433', markerfacecolor='purple', linestyle='', markersize=8),
+                          Line2D([0], [0], marker='+', color='magenta', label='NGC 6760', markerfacecolor='magenta', linestyle='', markersize=8),
+                          Line2D([0], [0], marker='P', color='blue', label='Earth', markerfacecolor='blue', linestyle='', markersize=8),
+                          Line2D([0], [0], marker='o', color='black', label='Galaxy Center', markerfacecolor='black', linestyle='', markersize=8),
+                          #Line2D([0], [0], lw=1, color='blue', label='H'),
+                          #Line2D([0], [0], lw=1, color='blue', label='$\overline{H}$'),
+                          #Line2D([0], [0], lw=1, color='orange', label='He'),
+                          #Line2D([0], [0], lw=1, color='green', label='H'),
+                          #Line2D([0], [0], lw=1, color='red', label='F'),
+                          ]
+    fig.legend(handles=legend_elements, loc='upper right')
 
-    #plt.savefig("results/conferences_2024/4types_with_uncert_with_random_3projections.png", dpi=300, bbox_inches='tight')
+    plt.savefig(fname, dpi=300, bbox_inches='tight')
     plt.show()
 
 def plot3D(data) -> None:
@@ -143,6 +142,11 @@ def plot3D(data) -> None:
 
 if __name__ == '__main__':
     # plot 3D
+    data_22 = np.genfromtxt('traj_PA+TA_Fe_22_event_10000sims.txt', unpack=True, skip_footer=1)
+    data_23 = np.genfromtxt('traj_PA+TA_Fe_23_event_10000sims.txt', unpack=True, skip_footer=1)
+    data_30 = np.genfromtxt('traj_PA+TA_Fe_30_event_10000sims.txt', unpack=True, skip_footer=1)
     #plot3D(np.genfromtxt('galactic_trajectories_with_uncert_with_random_4types.txt', unpack=True, skip_footer=1))
     #plot2DProjection(np.genfromtxt('one_particle_galactic_trajectories_with_uncert_with_random_C.txt', unpack=True, skip_footer=1), (2,3))
-    plotAll2DProjections(np.genfromtxt('trajectories/traj_PA+TA_all_part_24th_event.txt', unpack=True, skip_footer=1))
+    plotAll2DProjections(data_22, title = "All three projections for the simulated CR with Z = 26 and random striated+turbulent field for the TA event (top)", fname = "Fe_comb_22event_3projections.png")
+    plotAll2DProjections(data_23, title = "All three projections for the simulated CR with Z = 26 and random striated+turbulent field for the TA event (bottom)", fname = "Fe_comb_23event_3projections.png")
+    plotAll2DProjections(data_30, title = "All three projections for the simulated CR with Z = 26 and random striated+turbulent field for the PA event", fname = "Fe_comb_30event_3projections.png")

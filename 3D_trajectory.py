@@ -1,6 +1,7 @@
 from crpropa import *
 from useful_funcs import eqToGal
 import math
+from tqdm import tqdm
 
 
 class MyTrajectoryOutput(Module):
@@ -58,17 +59,18 @@ if __name__ == '__main__':
     #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
     particles = [- nucleusId(52,26)]
     events_in_void = [16, 18, 19, 20, 22, 23, 24, 25, 30]
+    triplet = [22, 23, 30]
     sigma_energy = (0.07, 0.15)
     sigma_dir = (0.002, 0.003) #1, 1.5 degree directional uncertainty
 
-    for event_idx in events_in_void:
+    for event_idx in tqdm(triplet):
         # simulation setup
         sim = ModuleList()
         sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
         sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
-        output = MyTrajectoryOutput(f'trajectories/trajectories_1e4/Fe/traj_PA+TA_Fe_{event_idx}_event.txt')
-        sim.add(output)
         NUM_OF_SIMS = 10000
+        output = MyTrajectoryOutput(f'resulting_data_for_conf/mag_rand/final/traj_PA+TA_Fe_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
+        sim.add(output)
 
         event = events[event_idx]
 
@@ -81,13 +83,17 @@ if __name__ == '__main__':
         mean_dir.setRThetaPhi(1, lat0, lon0)
 
         for pid in particles:
-            for i in range(NUM_OF_SIMS):
+            for i in tqdm(range(NUM_OF_SIMS)):
                 if int(event[0]) < 28:
                     energy = R.randNorm(mean_energy, sigma_energy[1])
                     direction = R.randVectorAroundMean(mean_dir, sigma_dir[1])
+                    #energy = mean_energy
+                    #direction = mean_dir
                 else:
                     energy = R.randNorm(mean_energy, sigma_energy[0])
                     direction = R.randVectorAroundMean(mean_dir, sigma_dir[0])
+                    #energy = mean_energy
+                    #direction = mean_dir
 
                 candidate = Candidate(ParticleState(pid, energy, position, direction))
                 sim.run(candidate)

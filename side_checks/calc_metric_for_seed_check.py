@@ -69,7 +69,8 @@ def rotate_yz(x, y, z, norm):
 
 def makeCut(data, target_cords):
     '''Returns the point of intersection of the trajectory with the object surface.
-    Doesnt make ortogonal transformation. Need to be merged with calcEdge?'''
+    Makes ortogonal transformation to match yOz plane. Need to be merged with calcEdge?
+    Now returns also a transformed object cords as [y, z]'''
     I,X,Y,Z = data
     x_nonrot, y_nonrot, z_nonrot = [], [], []
     for i in np.unique(I):
@@ -83,8 +84,13 @@ def makeCut(data, target_cords):
         z_nonrot.append(_z[-1])
 
     x_rot, y_rot, z_rot = rotate_yz(x_nonrot, y_nonrot, z_nonrot, norm)
+    obj_trans = np.array(target_cords[1:]).reshape(-1,1)
+    abs_norm = np.sqrt(norm[0]**2 + norm[1]**2 + norm[2]**2)
+    alpha = np.arccos(norm[0]/abs_norm)
+    obj_rot = np.matmul(r_mat(-alpha), obj_trans)
+    obj_cords_transformed = np.array([obj_rot[1], obj_rot[2]])
 
-    return pd.DataFrame({'X':np.array(x_rot), 'Y':np.array(y_rot), 'Z':np.array(z_rot)})
+    return pd.DataFrame({'X':np.array(x_rot), 'Y':np.array(y_rot), 'Z':np.array(z_rot)}), obj_cords_transformed
 
 def calculate_kde(data, object_cords) -> float:
     '''Calculates pdf using kde with bandwith from the gridsearch
@@ -123,10 +129,32 @@ def calculate_kde(data, object_cords) -> float:
 
     return (np.exp(kde.score_samples(point.T))/Z.max())[0] #score_samples returns the log density, so exp is needed. Also prob density can be more than 1
 
+def calculateHit(data, circle_center, r) -> float:
+    '''
+    This function calculates the number of events hitting the area of 1 degree around
+    the potential source divided by the number of all simulated events.
+    Equasion as simple as : (x - cc_x)^2 + (y - cc_y)^2 = r^2
+    Returns simple float32 value.
+    '''
+
+    # Calculate squared distances from the circle center
+    data['distance_squared'] = (data['Y'] - circle_center[0]) ** 2 + (data['Z'] - circle_center[1]) ** 2
+
+    # Determine how many points are inside the circle
+    inside_circle_count = data[data['distance_squared'] <= r**2].shape[0]
+
+    return inside_circle_count/len(data['Y'])
+
 
 if __name__ == '__main__':
     path = 'trajectories_1e3_1000_rand_seeds/H/'
     file_list = glob.glob(f'{path}*.txt')
+    d_list = {
+        "sgr": 12.5,
+        "grs": 8.6,
+        "ss": 5.5,
+        "ngc_cords": 7.4
+    }
     objects_list = {
         "sgr": [0, 12.5*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.5, 12.5*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), 12.5*np.sin(0.77*np.pi/180)],
         "grs": [0, 8.6*np.cos(45.37*np.pi/180)*np.cos(-0.22*np.pi/180) - 8.5, 8.6*np.sin(45.37*np.pi/180)*np.cos(-0.22*np.pi/180), 8.6*np.sin(-0.22*np.pi/180)],
@@ -143,14 +171,16 @@ if __name__ == '__main__':
 
         #Creating cut for every potential source and finding score for them
         for obj_name, obj_cords in objects_list.items():
-            cutted_data = makeCut(data, obj_cords)
-            score = calculate_kde(cutted_data, obj_cords)
+            cut_data, obj_cords_tf = makeCut(data, obj_cords)
+            hit = calculateHit(cut_data, obj_cords_tf, np.pi*d_list[obj_name]/180)
+            #score = calculate_kde(cut_data, obj_cords_tf)
             temp_dict = {'Event': [event],
                     'Object': [obj_name],
                     'Seed': [seed],
-                    'Score': [score]
+                    'Hit': [hit]
+                    #'Score': [score]
                    }
             temp_df = pd.DataFrame(temp_dict)
             result = pd.concat([result, temp_df], ignore_index = True)
             result.reset_index()
-    result.to_csv(f"{path}results_for_{path.split('/')[1]}_rotated.csv")
+    result.to_csv(f"{path}results_for_{path.split('/')[1]}_rotated_hitMetric.csv")
