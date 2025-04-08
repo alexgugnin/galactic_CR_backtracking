@@ -71,7 +71,9 @@ if __name__ == '__main__':
     Running simulation
     '''
     #TA energy from "An extremely energetic cosmic ray observed by a surface detector array", Auger from other article check Telegram
-    initial_lats, initial_lons, all_events_lats, all_events_lons = runSimulation(sim, obs, events, seed=42, sigma_energy = (0.07, 0.15), sigma_dir = (0.002, 0.003), num_of_sims = 1)#, unique_event = 3)
+    initial_lats, initial_lons, all_events_lats, all_events_lons = runSimulation(sim, obs, events, seed=42, 
+                                                                                 sigma_energy = (0.07, 0.15), sigma_dir = (0.002, 0.003), 
+                                                                                 num_of_sims = 1)#, unique_event = 3)
 
     '''
     GATHERING DATA
@@ -87,10 +89,10 @@ if __name__ == '__main__':
     Visualizing results achieved
     '''
     map = SimMap(total_results, initial_lats, initial_lons, particles=['H'])#['H', 'aH', 'He', 'C', 'Fe']
-    map.setSaveName('results/conferences_2024/SGR_H.png')
+    map.setSaveName('test.png')
     map.setTitle("Events from PA + TA observatories with E > 100 EeV")
     map.setSourcesFlags({'mags': False, 'sbgs': False, 'clusts': True})
-    map.plotMap(sim = True, transform=True, sgr=True, legend=False, saving=False, custom_frame=False)
+    map.plotMap(sim = True, transform=True, sgr=True, legend=False, saving=True, custom_frame=False)
 
     '''
     Saving results

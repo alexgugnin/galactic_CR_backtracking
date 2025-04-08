@@ -196,7 +196,7 @@ class SimMap(object):
         return legend_elements
 
     def plotMap(self, sim=True, transform=None, saving=True, sgr=True, grs=False,
-                ss=False, ngc=False legend=True, custom_frame=False):
+                ss=False, ngc=False, legend=True, custom_frame=False):
         import matplotlib.pyplot as plt
         from matplotlib.patches import Patch
         import numpy as np
