@@ -103,7 +103,7 @@ def makeCut(data, target_cords, rot=True):
         
         obj_Z_rot = np.matmul(r_mat(beta), obj_trans) #rotating over Z
         norm_Z_rot = np.matmul(r_mat(beta), norm)
-        norms.append(np.matmul(r_mat(beta), norm))
+        norms.append(norm_Z_rot)
 
         obj_rot = np.matmul(p_mat(np.absolute(np.pi/2 - gamma)), obj_Z_rot) #rotating over X
         norm_X_rot = np.matmul(p_mat(np.absolute(np.pi/2 - gamma)), norm_Z_rot)

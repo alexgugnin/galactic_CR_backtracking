@@ -29,7 +29,7 @@ def runSimulation(sim, obs, events:list, seed:int, sigma_energy=(0,0), sigma_dir
         #mean_energy = 244 * EeV
         #sigma_energy = 0.1 * mean_energy  # 10% energy uncertainty
         #sigma_energy = 0
-        position = Vector3d(-8.5, 0, 0) * kpc
+        position = Vector3d(-8.2, 0, 0.0208) * kpc
 
         lon0,lat0 = eqToGal(event[1], event[2])        #RETURN WHEN NO TEST
         #lon0,lat0 = event[1]*math.pi/180, event[2]*math.pi/180

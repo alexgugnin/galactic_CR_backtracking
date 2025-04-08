@@ -25,3 +25,8 @@ resulting_data_for_conf/
 paper_results/
 test.png
 side_checks/trajectories_1000_rand_seeds/
+trajectories/H
+trajectories/He
+trajectories/C
+trajectories/N
+trajectories/O

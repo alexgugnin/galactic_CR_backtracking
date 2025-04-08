@@ -60,19 +60,19 @@ if __name__ == '__main__':
     Sim for 4 particles for 1 event(third one)
     '''
     #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
-    particles = [- nucleusId(12,6)]
+    particles = [- nucleusId(52,26)]
     events_in_void = [16, 18, 19, 20, 22, 23, 24, 25, 30]
     triplet = [22, 23, 30]
     sigma_energy = (0.07, 0.15)
     sigma_dir = (0.002, 0.003) #1, 1.5 degree directional uncertainty
 
-    for event_idx in tqdm(triplet):
+    for event_idx in tqdm(events_in_void):
         # simulation setup
         sim = ModuleList()
         sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
         sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
-        NUM_OF_SIMS = 100
-        output = MyTrajectoryOutput(f'arrival_time_estimation/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
+        NUM_OF_SIMS = 1000
+        output = MyTrajectoryOutput(f'trajectories/Fe/traj_PA+TA_Fe_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
         sim.add(output)
 
         event = events[event_idx]
