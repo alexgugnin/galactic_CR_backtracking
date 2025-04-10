@@ -176,9 +176,9 @@ def plot2D_projection(x, z, target, radius, save_name=None) -> None:
 
 if __name__ == '__main__':
     particle = 'C'
-    event_num = 22
+    event_num = 30
     object_name = 'sgr'
-    data = np.genfromtxt(f'trajectories/C/traj_PA+TA_{particle}_{event_num}_event_1000sims.txt', unpack=True, skip_footer=1)
+    data = np.genfromtxt(f'trajectories/C/traj_PA+TA_{particle}_{event_num}_event_10000sims.txt', unpack=True, skip_footer=1)
     
     d_list = {
         "sgr": 12.5, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     #print(data_cut['Y'])
     #print(norms)
     #data_cut_unrot, _ = makeCut(data, obj_cords, rot=False)
-    plot3D(data, objects_list)
+    #plot3D(data, objects_list)
     #plot3D_from_pandas(data, data_cut_unrot, objects_list)
     #plot3D_from_pandas(data, data_cut, objects_list, target_transformed=obj_cords_transformed, norms=norms)#, save_file=f'paper_results/trajectories/event_{event_num}_{object_name}_{particle}_3Dmap.jpeg')
     score = calculate_kde(data_cut, obj_cords_transformed)
