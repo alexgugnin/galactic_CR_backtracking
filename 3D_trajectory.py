@@ -73,7 +73,7 @@ if __name__ == '__main__':
         sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
         sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
         NUM_OF_SIMS = 10000
-        output = MyTrajectoryOutput(f'trajectories/C/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
+        output = MyTrajectoryOutput(f'trajectories_data/C/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
         sim.add(output)
 
         event = events[event_idx]

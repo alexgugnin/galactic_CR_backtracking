@@ -7,8 +7,55 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from side_checks.calc_metric_for_seed_check import makeCut, calcPerpPlane, calcEdge, r_mat, calculate_kde, calculate_hit, calculate_mahalanobis
+import astropy.units as u
+from astropy.coordinates import SkyCoord
 
 import glob
+
+
+def get_objects_list():
+    d_list = {
+        "sgr": 12.5, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
+        "grs": 8.6, #+2-1.6  https://arxiv.org/pdf/1409.2453
+        "ss": 5.5, #+-0.2   https://www.aanda.org/articles/aa/full_html/2018/09/aa32488-17/aa32488-17.html
+        "ngc": 7.58#       https://doi.org/10.1093/mnras/stab1475
+    }
+    object_coords = {"sgr": {"RA": 286.8097083, "DEC": 9.3222500, "dist": d_list["sgr"]}, #https://arxiv.org/pdf/2412.20050
+                     "grs": {"RA": 288.798, "DEC": 10.946, "dist": d_list["grs"]},  #https://swift.gsfc.nasa.gov/results/transients/GRS1915p105/ 
+                     "ss": {"RA": 287.956, "DEC": 4.99, "dist": d_list["ss"]},      #https://swift.gsfc.nasa.gov/results/transients/SS433/
+                     "ngc": {"RA": 287.800, "DEC": 1.030, "dist": d_list["ngc"]}, #https://doi.org/10.1093/mnras/stab1475
+                     }
+    
+    '''
+    objects_list_old = {
+        "sgr": [0, d_list['sgr']*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.2, d_list['sgr']*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), d_list['sgr']*np.sin(0.77*np.pi/180) + 0.0208],
+        "grs": [0, d_list['grs']*np.cos(45.37*np.pi/180)*np.cos(-0.22*np.pi/180) - 8.2, d_list['grs']*np.sin(45.37*np.pi/180)*np.cos(-0.22*np.pi/180), d_list['grs']*np.sin(-0.22*np.pi/180) + 0.0208],
+        "ss": [0, d_list['ss']*np.cos(39.69*np.pi/180)*np.cos(-2.24*np.pi/180) - 8.2, d_list['ss']*np.sin(39.69*np.pi/180)*np.cos(-2.24*np.pi/180), d_list['ss']*np.sin(-2.24*np.pi/180) + 0.0208],
+        "ngc": [0, d_list['ngc']*np.cos(36.11*np.pi/180)*np.cos(-3.9*np.pi/180) - 8.2, d_list['ngc']*np.sin(36.11*np.pi/180)*np.cos(-3.9*np.pi/180), d_list['ngc']*np.sin(-3.9*np.pi/180) + 0.0208]
+    }
+    '''
+    coords_sgr = SkyCoord(ra=object_coords["sgr"]["RA"]*u.deg, dec=object_coords["sgr"]["DEC"]*u.deg,
+                      distance=object_coords["sgr"]["dist"]*u.kpc, frame='icrs')
+    coords_grs = SkyCoord(ra=object_coords["grs"]["RA"]*u.deg, dec=object_coords["grs"]["DEC"]*u.deg,
+                      distance=object_coords["grs"]["dist"]*u.kpc, frame='icrs')
+    coords_ss = SkyCoord(ra=object_coords["ss"]["RA"]*u.deg, dec=object_coords["ss"]["DEC"]*u.deg,
+                      distance=object_coords["ss"]["dist"]*u.kpc, frame='icrs')
+    coords_ngc = SkyCoord(ra=object_coords["ngc"]["RA"]*u.deg, dec=object_coords["ngc"]["DEC"]*u.deg,
+                      distance=object_coords["ngc"]["dist"]*u.kpc, frame='icrs')
+    
+    g_sgr = coords_sgr.transform_to('galactocentric') 
+    g_grs = coords_grs.transform_to('galactocentric') 
+    g_ss = coords_ss.transform_to('galactocentric') 
+    g_ngc = coords_ngc.transform_to('galactocentric') 
+
+    objects_list = {
+        "sgr": [0, g_sgr.x.value, g_sgr.y.value, g_sgr.z.value],
+        "grs": [0, g_grs.x.value, g_grs.y.value, g_grs.z.value],
+        "ss": [0, g_ss.x.value, g_ss.y.value, g_ss.z.value],
+        "ngc": [0, g_ngc.x.value, g_ngc.y.value, g_ngc.z.value]
+    }
+
+    return objects_list, d_list
 
 def plot3D(data, objects) -> None:
     fig = plt.figure(figsize=(12,12))
@@ -153,7 +200,8 @@ def plot3D_from_pandas(data, data_cut, objects, target_transformed = None, norms
     if save_file is not None: plt.savefig(save_file, dpi=300, bbox_inches='tight')
     plt.show()
 
-def plot2D_projection(x, z, target, radius, save_name=None) -> None:
+def plot2D_projection(x, z, target, radius, xyz_kde, save_name=None) -> None:
+    import seaborn as sns
     '''Func for plotting XZ projection with target object and 1 degree circle around it'''
 
     theta = np.linspace(0, 2 * np.pi, 100)  # Angles from 0 to 2*pi
@@ -161,37 +209,80 @@ def plot2D_projection(x, z, target, radius, save_name=None) -> None:
     z_circle = target[2] + radius * np.sin(theta)  # Y coordinates of the circle
 
     # Plot the circle
-    plt.figure(figsize=(6, 6))
-    plt.plot(x_circle, z_circle, label=f'Circle (r={radius})')
+    plt.figure(figsize=(12, 8))
+    plt.plot(x_circle, z_circle, label=f'Circle (r={radius})', c='r')
 
+    '''Simple 2D scatterplot'''
+    
     plt.scatter(x, z, s = 5, label="Trajectories crossing the object's plane")
     plt.scatter(target[0], target[2], c='r', label='Target object')
+    plt.text(target[0]-0.15, target[2]+0.06, 'SGR 1900+14', fontsize=10, fontweight='bold', c = 'red')
     plt.xlabel("Cartesian coordinate X, kPc")
     plt.ylabel("Cartesian coordinate Z, kPc")
     if save_name:
         plt.savefig(save_name, dpi=300, bbox_inches='tight')
     plt.legend()
     plt.show()
+    
 
+    '''KDE colormesh with levels'''
+    '''
+    confidence_levels = [0.6827, 0.9545, 0.9973]
+    Z_flat = xyz_kde[2].flatten()
+    Z_sorted = np.sort(Z_flat)[::-1]
+    cumsum = np.cumsum(Z_sorted)
+    cumsum /= cumsum[-1]
+    levels = sorted([Z_sorted[np.searchsorted(cumsum, cl)] for cl in confidence_levels])
+
+    plt.contour(xyz_kde[0], xyz_kde[1], xyz_kde[2], levels=levels, colors=['blue', 'green', 'red'])
+    plt.pcolormesh(xyz_kde[0], xyz_kde[1], xyz_kde[2], cmap='plasma')
+    plt.scatter(target[0], target[2], marker='+', c='red', s=80, label = 'SGR 1900+14')
+    plt.text(target[0]-0.15, target[2]+0.06, 'SGR 1900+14', fontsize=10, fontweight='bold', c = 'red')
+    #plt.legend()
+    if save_name:
+        plt.savefig(save_name, dpi=300, bbox_inches='tight')
+    plt.show()
+    '''
+    '''Histplot'''
+    '''
+    plt.hist2d(x, z, bins=30, cmap='binary')
+    cb = plt.colorbar()
+    cb.set_label('counts in bin')
+    plt.scatter(target[0], target[2], marker='+', c='red', s=80, label = "Target object")
+    plt.xlabel('X, kpc')
+    plt.ylabel('Z, kpc')
+    #plt.text(8.2, 0.3, 'SGR 1900+14', fontsize=10, fontweight='bold', c = 'red')
+    if save_name:
+        plt.savefig(save_name, dpi=300, bbox_inches='tight')
+    plt.legend()
+    plt.show()
+    '''
+
+    '''Joint histplot'''
+    '''
+    nbins = int(np.ceil(np.log2(len(x))) + 1)
+    g0 = sns.jointplot(x=np.array(x), y=np.array(z), kind="hist", height=8, ratio=6,
+                       marginal_ticks=True,
+                       marginal_kws=dict(bins=nbins, fill=True))
+    #g0.plot_joint(sns.kdeplot, color="grey", zorder=0, levels = [0.003, 0.05, 0.32])#levels=[0.68, 0.95, 0.997])
+    g0.ax_joint.scatter(target[0], target[2], marker='+', c='red', s=80)
+    sns.kdeplot(x = x, y = z, color="grey", zorder=0, levels = [0.003, 0.05, 0.32], ax=g0.ax_joint)
+    g0.ax_joint.text(target[0], target[2], 'SGR 1900+14', fontsize=9, fontweight='bold', c = 'red')
+
+    g0.set_axis_labels('X, kpc', 'Z, kpc', fontsize=10)
+    g0.figure.tight_layout()
+
+    if save_name:
+        plt.savefig(save_name, dpi=300, bbox_inches='tight')
+    plt.show()
+    '''
 
 if __name__ == '__main__':
     particle = 'C'
-    event_num = 30
+    event_num = 23
     object_name = 'sgr'
-    data = np.genfromtxt(f'trajectories/C/traj_PA+TA_{particle}_{event_num}_event_10000sims.txt', unpack=True, skip_footer=1)
-    
-    d_list = {
-        "sgr": 12.5, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
-        "grs": 8.6, #+2-1.6
-        "ss": 5.5, #+-0.2
-        "ngc": 7.4
-    }
-    objects_list = {
-        "sgr": [0, d_list['sgr']*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.2, d_list['sgr']*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), d_list['sgr']*np.sin(0.77*np.pi/180) + 0.0208],
-        "grs": [0, d_list['grs']*np.cos(45.37*np.pi/180)*np.cos(-0.22*np.pi/180) - 8.2, d_list['grs']*np.sin(45.37*np.pi/180)*np.cos(-0.22*np.pi/180), d_list['grs']*np.sin(-0.22*np.pi/180) + 0.0208],
-        "ss": [0, d_list['ss']*np.cos(39.69*np.pi/180)*np.cos(-2.24*np.pi/180) - 8.2, d_list['ss']*np.sin(39.69*np.pi/180)*np.cos(-2.24*np.pi/180), d_list['ss']*np.sin(-2.24*np.pi/180) + 0.0208],
-        "ngc": [0, d_list['ngc']*np.cos(36.11*np.pi/180)*np.cos(-3.9*np.pi/180) - 8.2, d_list['ngc']*np.sin(36.11*np.pi/180)*np.cos(-3.9*np.pi/180), d_list['ngc']*np.sin(-3.9*np.pi/180) + 0.0208]
-    }
+    data = np.genfromtxt(f'trajectories_data/C/traj_PA+TA_{particle}_{event_num}_event_1000sims.txt', unpack=True, skip_footer=1)
+    objects_list, d_list = get_objects_list()
 
     obj_cords = objects_list[object_name]
     '''
@@ -204,12 +295,12 @@ if __name__ == '__main__':
     #plot3D(data, objects_list)
     #plot3D_from_pandas(data, data_cut_unrot, objects_list)
     #plot3D_from_pandas(data, data_cut, objects_list, target_transformed=obj_cords_transformed, norms=norms)#, save_file=f'paper_results/trajectories/event_{event_num}_{object_name}_{particle}_3Dmap.jpeg')
-    score = calculate_kde(data_cut, obj_cords_transformed)
+    xyz_colormesh_kde, score = calculate_kde(data_cut, obj_cords_transformed)
     count, hit = calculate_hit(data_cut, obj_cords_transformed, np.pi*d_list[object_name]/180)
     #mah_dist = calculate_mahalanobis(data_cut, obj_cords_transformed)
     print(f"\n Num of trajectories: {count}, Hit is :{hit}, KDE score is : {score}")
-    plot2D_projection(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, )
-                      #f'paper_results/trajectories/{object_name}/event_{event_num}_{object_name}_{particle}_2.9.jpeg')
+    plot2D_projection(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, xyz_colormesh_kde,
+                      f'paper_results/projections/eng_pres_scatter.jpeg')
 
     '''3D VOLUME APPROACH'''
     '''

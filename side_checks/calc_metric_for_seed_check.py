@@ -6,6 +6,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.neighbors import KernelDensity
 import glob
 import time
+from typing import Tuple
 
 def calcPerpPlane(target_cords, earth_cords = [0, -8.2, 0, 0.0208]):
     '''Calculates the A, B, C, D for the plane'''
@@ -116,7 +117,7 @@ def makeCut(data, target_cords, rot=True):
     else:
         return pd.DataFrame({'X':np.array(x_nonrot), 'Y':np.array(y_nonrot), 'Z':np.array(z_nonrot)}), target_cords[:2]
 
-def calculate_kde(data, object_cords) -> float:
+def calculate_kde(data, object_cords) -> Tuple[Tuple[np.array, np.array, np.array], float]:
     '''Calculates pdf using kde with bandwith from the gridsearch
     and returns the denstiy value of needed object for this pdf divided by
     the max density value for this pdf
@@ -130,8 +131,8 @@ def calculate_kde(data, object_cords) -> float:
     print('---STARTING KDE GRIDSEARCH---')
     start_time = time.time()
     grid = GridSearchCV(KernelDensity(),
-                    {'bandwidth': np.linspace(0.01, 1.0, 100)},
-                    cv=20) # 20-fold cross-validation with 100 bandwidths
+                    {'bandwidth': np.linspace(0.01, 1, 100)},
+                    cv=20) # 20-fold cross-validation with 1000 bandwidths
     grid.fit(xz.T)
     kde = grid.best_estimator_
     print(f"Gridsearch FINISHED in {time.time() - start_time} s.")
@@ -148,7 +149,7 @@ def calculate_kde(data, object_cords) -> float:
 
     Z = np.reshape(np.exp(kde.score_samples(positions.T)), X.shape)
 
-    return (np.exp(kde.score_samples(point.T))/Z.max())[0] #score_samples returns the log density, so exp is needed. Also prob density can be more than 1
+    return (X, Y, Z), (np.exp(kde.score_samples(point.T))/Z.max())[0] #score_samples returns the log density, so exp is needed. Also prob density can be more than 1
 
 def calculate_hit(data, circle_center, r) -> float:
     '''

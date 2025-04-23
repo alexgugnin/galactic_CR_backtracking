@@ -22,12 +22,8 @@ traj_PA+TA_Fe_23_event_10737418_seed.txt
 side_checks/temp_test.py
 func_lib
 resulting_data_for_conf/
-paper_results/maps/
-paper_results/trajectories/
+paper_results/
 test.png
 side_checks/trajectories_1000_rand_seeds/
-trajectories/H
-trajectories/He
-trajectories/C
-trajectories/N
-trajectories/O
+trajectories/
+trajectories_data/
