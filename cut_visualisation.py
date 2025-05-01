@@ -281,26 +281,27 @@ if __name__ == '__main__':
     particle = 'C'
     event_num = 23
     object_name = 'sgr'
-    data = np.genfromtxt(f'trajectories_data/C/traj_PA+TA_{particle}_{event_num}_event_1000sims.txt', unpack=True, skip_footer=1)
+    data = np.genfromtxt(f'trajectories_data/C/traj_PA+TA_{particle}_{event_num}_event_1000sims_CORRECTED.txt', unpack=True, skip_footer=1)
     objects_list, d_list = get_objects_list()
-
+    
     obj_cords = objects_list[object_name]
     '''
     2D SURFACE APPROACH
     '''
     data_cut, obj_cords_transformed, norms = makeCut(data, obj_cords, rot=True)
+    plot3D(data, objects_list)
     #print(data_cut['Y'])
     #print(norms)
     #data_cut_unrot, _ = makeCut(data, obj_cords, rot=False)
     #plot3D(data, objects_list)
     #plot3D_from_pandas(data, data_cut_unrot, objects_list)
     #plot3D_from_pandas(data, data_cut, objects_list, target_transformed=obj_cords_transformed, norms=norms)#, save_file=f'paper_results/trajectories/event_{event_num}_{object_name}_{particle}_3Dmap.jpeg')
-    xyz_colormesh_kde, score = calculate_kde(data_cut, obj_cords_transformed)
+    xyz_colormesh_kde, score = 0,0#calculate_kde(data_cut, obj_cords_transformed)
     count, hit = calculate_hit(data_cut, obj_cords_transformed, np.pi*d_list[object_name]/180)
     #mah_dist = calculate_mahalanobis(data_cut, obj_cords_transformed)
     print(f"\n Num of trajectories: {count}, Hit is :{hit}, KDE score is : {score}")
-    plot2D_projection(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, xyz_colormesh_kde,
-                      f'paper_results/projections/eng_pres_scatter.jpeg')
+    plot2D_projection(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, xyz_colormesh_kde,)
+                      #f'paper_results/projections/eng_pres_scatter.jpeg')
 
     '''3D VOLUME APPROACH'''
     '''

@@ -27,3 +27,6 @@ test.png
 side_checks/trajectories_1000_rand_seeds/
 trajectories/
 trajectories_data/
+data/Auger_lowE_shapley.dat
+shapley_pipeline/Auger_lowE_shapley.dat
+shapley_pipeline/auger+TA_combined.dat

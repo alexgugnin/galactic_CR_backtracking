@@ -7,6 +7,9 @@ def runSimulation(sim, obs, events:list, seed:int, sigma_energy=(0,0), sigma_dir
     from crpropa import Random, nucleusId, EeV, Vector3d, kpc, Candidate, ParticleState
     from useful_funcs import eqToGal
     import math
+    from tqdm import tqdm
+    from astropy import units as u
+    from astropy.coordinates import SkyCoord
 
     R = Random(seed)  # CRPropa random number generator
     #Pid: 1000000000 + Z * 10000 + A * 10
@@ -19,10 +22,11 @@ def runSimulation(sim, obs, events:list, seed:int, sigma_energy=(0,0), sigma_dir
 
     all_events_lons, all_events_lats = [], []
     initial_lons, initial_lats = [], []
-    for event in events:
+    for event in tqdm(events):
         if unique_event:
             if int(event[0]) != unique_event: continue
-        particles = [- nucleusId(1,1), nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
+        #particles = [- nucleusId(1,1), nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
+        particles = [- nucleusId(1,1), - nucleusId(4,2)]
 
         mean_energy = event[3] * EeV
         #mean_energy = (26 * (10**18.94)/1e18) * EeV
@@ -31,9 +35,15 @@ def runSimulation(sim, obs, events:list, seed:int, sigma_energy=(0,0), sigma_dir
         #sigma_energy = 0
         position = Vector3d(-8.2, 0, 0.0208) * kpc
 
-        lon0,lat0 = eqToGal(event[1], event[2])        #RETURN WHEN NO TEST
+        coords = SkyCoord(ra=event[1], dec=event[2], frame='icrs', unit='deg')
+        #Here we have longtitudes [0, 2pi] and latitudes
+        lon = coords.galactic.l
+        lon.wrap_angle = 180 * u.deg # longitude (phi) [-pi, pi] with 0 pointing in x-direction
+        lon0 = lon.radian
+        lat0 = coords.galactic.b.radian
         #lon0,lat0 = event[1]*math.pi/180, event[2]*math.pi/180
         lat0 = math.pi/2 - lat0 #CrPropa uses colatitude, e.g. 90 - lat in degrees
+        #lon0 = lon0 - math.pi
         mean_dir = Vector3d()
         mean_dir.setRThetaPhi(1, lat0, lon0)
         #sigma_dir = 0.002 # - 1 degree directional uncertainty
@@ -46,10 +56,10 @@ def runSimulation(sim, obs, events:list, seed:int, sigma_energy=(0,0), sigma_dir
             lons, lats = [], []
             for i in range(num_of_sims):
                 if int(event[0]) < 28:
-                    energy = R.randNorm(mean_energy, sigma_energy[1])
+                    energy = R.randNorm(mean_energy, sigma_energy[1]*mean_energy)
                     direction = R.randVectorAroundMean(mean_dir, sigma_dir[1])
                 else:
-                    energy = R.randNorm(mean_energy, sigma_energy[0])
+                    energy = R.randNorm(mean_energy, sigma_energy[0]*mean_energy)
                     direction = R.randVectorAroundMean(mean_dir, sigma_dir[0])
 
                 candidate = Candidate(ParticleState(pid, energy, position, direction))

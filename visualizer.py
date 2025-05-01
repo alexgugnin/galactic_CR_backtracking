@@ -196,12 +196,14 @@ class SimMap(object):
         return legend_elements
 
     def plotMap(self, sim=True, transform=None, saving=True, sgr=True, grs=False,
-                ss=False, ngc=False, legend=True, custom_frame=False):
+                ss=False, ngc=False, shapley=False, legend=True, custom_frame=False):
         import matplotlib.pyplot as plt
         from matplotlib.patches import Patch
         import numpy as np
         from astropy.wcs import WCS
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
+        import astropy.units as u
+        from astropy.coordinates import SkyCoord
         '''Description'''
 
         #General parameters
@@ -224,12 +226,13 @@ class SimMap(object):
         #Plotting events
         if transform:
             lons, lats = inits_transform(self.initial_lons, self.initial_lats)
-            ta_lons, ta_lats = [lons[16], lons[18], lons[19], lons[20], lons[22], lons[23], lons[24], lons[25]], [lats[16], lats[18], lats[19], lats[20], lats[22], lats[23], lats[24], lats[25]]
-            pa_lons, pa_lats = [lons[30]], [lats[30]]
+            #ta_lons, ta_lats = [lons[16], lons[18], lons[19], lons[20], lons[22], lons[23], lons[24], lons[25]], [lats[16], lats[18], lats[19], lats[20], lats[22], lats[23], lats[24], lats[25]]
+            #pa_lons, pa_lats = [lons[30]], [lats[30]]
             #ta_lons, ta_lats = lons[:28], lats[:28]
             #pa_lons, pa_lats = lons[28:], lats[28:]
+            pa_lons, pa_lats = lons, lats
             plt.scatter(pa_lons, pa_lats, marker='*', c='orange', s=50)
-            plt.scatter(ta_lons, ta_lats, marker='*', c='gold', s=50)
+            #plt.scatter(ta_lons, ta_lats, marker='*', c='gold', s=50)
         else:
             plt.scatter(self.initial_lons, self.initial_lats, marker='*', c='orange', s=50)
         #Plotting sources
@@ -279,16 +282,22 @@ class SimMap(object):
             plt.text(0.751-2*0.751 - 15*np.pi/180, 0.0135+7*np.pi/180, 'SGR 1900+14', fontsize=8, fontweight='bold')#SGR 1900+14
         #Plot GRS 1915+105
         if grs:
-            grs_cords = [0, 8.6*np.cos(45.37*np.pi/180)*np.cos(-0.22*np.pi/180) - 8.5, 8.6*np.sin(45.37*np.pi/180)*np.cos(-0.22*np.pi/180), 8.6*np.sin(-0.22*np.pi/180)]
-            projections[projection].scatter(grs_cords[axis[0]], grs_cords[axis[1]], marker='+', c='green', s=70) #45.37 -0.22 8.6+2.0-1.6
+            grs_cords = []
+            plt.scatter(grs_cords[0], grs_cords[1], marker='+', c='green', s=70) #45.37 -0.22 8.6+2.0-1.6
         #Plot SS 433 Мікроквазар 39.69 -2.24 5.5±0.2
         if ss:
-            ss_cords = [0, 5.5*np.cos(39.69*np.pi/180)*np.cos(-2.24*np.pi/180) - 8.5, 5.5*np.sin(39.69*np.pi/180)*np.cos(-2.24*np.pi/180), 5.5*np.sin(-2.24*np.pi/180)]
-            projections[projection].scatter(ss_cords[axis[0]], ss_cords[axis[1]], marker='+', c='purple', s=70) #39.69 -2.24 5.5±0.2
+            ss_cords = []
+            plt.scatter(ss_cords[0], ss_cords[1], marker='+', c='purple', s=70) #39.69 -2.24 5.5±0.2
         #Plot NGC 6760 Кулясте скупчення 36.11 -3.9 7.4±0.4
         if ngc:
-            ngc_cords = [0, 7.4*np.cos(36.11*np.pi/180)*np.cos(-3.9*np.pi/180) - 8.5, 7.4*np.sin(36.11*np.pi/180)*np.cos(-3.9*np.pi/180), 7.4*np.sin(-3.9*np.pi/180)]
-            projections[projection].scatter(ngc_cords[axis[0]], ngc_cords[axis[1]], marker='+', c='magenta', s=70) #36.11 -3.9 7.4±0.4
+            ngc_cords = []
+            plt.scatter(ngc_cords[0], ngc_cords[1], marker='+', c='magenta', s=70) #36.11 -3.9 7.4±0.4
+        if shapley:
+            shapley_cords = {"RA": 201.9934, "DEC": -31.5014, "z": 0.0487}
+            cords = SkyCoord(ra=shapley_cords["RA"]*u.deg, dec=shapley_cords["DEC"]*u.deg, frame='icrs').transform_to("galactic")
+            plt.scatter((2*np.pi*u.rad - cords.l.to(u.rad)).value, cords.b.to(u.rad).value, marker='+', c='magenta', s=70)
+            plt.text((2*np.pi*u.rad - cords.l.to(u.rad)).value, (cords.b.to(u.rad)).value + 5*np.pi/180, 
+                     'Shapley Center', fontsize=8, fontweight='bold')
         #Legend
         if legend: plt.legend(handles=self.makeLegend(), loc='upper right')
         #Ticks

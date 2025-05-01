@@ -2,6 +2,8 @@ from crpropa import *
 from useful_funcs import eqToGal
 import math
 from tqdm import tqdm
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 
 
 class MyTrajectoryOutput(Module):
@@ -72,8 +74,8 @@ if __name__ == '__main__':
         sim = ModuleList()
         sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
         sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
-        NUM_OF_SIMS = 10000
-        output = MyTrajectoryOutput(f'trajectories_data/C/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
+        NUM_OF_SIMS = 1000
+        output = MyTrajectoryOutput(f'trajectories_data/C/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims_CORRECTED.txt')
         sim.add(output)
 
         event = events[event_idx]
@@ -81,20 +83,27 @@ if __name__ == '__main__':
         mean_energy = event[3] * EeV
         position = Vector3d(-8.2, 0, 0.0208) * kpc
 
-        lon0,lat0 = eqToGal(event[1], event[2])        #RETURN WHEN NO TEST
+        #lon0,lat0 = eqToGal(event[1], event[2])        #RETURN WHEN NO TEST
+        coords = SkyCoord(ra=event[1], dec=event[2], frame='icrs', unit='deg')
+        #Here we have longtitudes [0, 2pi] and latitudes
+        lon = coords.galactic.l
+        lon.wrap_angle = 180 * u.deg # longitude (phi) [-pi, pi] with 0 pointing in x-direction
+        lon0 = lon.radian
+        lat0 = coords.galactic.b.radian
         lat0 = math.pi/2 - lat0 #CrPropa uses colatitude, e.g. 90 - lat in degrees
+        #lon0 = lon0 - math.pi #BAD NEW CORRECTION
         mean_dir = Vector3d()
         mean_dir.setRThetaPhi(1, lat0, lon0)
 
         for pid in particles:
             for i in tqdm(range(NUM_OF_SIMS)):
                 if int(event[0]) < 28:
-                    energy = R.randNorm(mean_energy, sigma_energy[1])
+                    energy = R.randNorm(mean_energy, sigma_energy[1]*mean_energy)
                     direction = R.randVectorAroundMean(mean_dir, sigma_dir[1])
                     #energy = mean_energy
                     #direction = mean_dir
                 else:
-                    energy = R.randNorm(mean_energy, sigma_energy[0])
+                    energy = R.randNorm(mean_energy, sigma_energy[0]*mean_energy)
                     direction = R.randVectorAroundMean(mean_dir, sigma_dir[0])
                     #energy = mean_energy
                     #direction = mean_dir

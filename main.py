@@ -54,14 +54,22 @@ if __name__ == '__main__':
             temp_event = line.split()
             events.append((temp_event[0], float(temp_event[6]), float(temp_event[7]), float(temp_event[8])))
     '''
-
+    
     events = []
     with open('data/auger+TA_combined.dat', 'r') as infile:
         for line in infile:
             if line.split()[0] == '#': continue
             temp_event = line.split()
             events.append((temp_event[0], float(temp_event[6]), float(temp_event[7]), float(temp_event[8])))
-
+    
+    '''
+    events = []
+    with open('data/Auger_lowE_shapley.dat', 'r') as infile:
+        for line in infile:
+            if line.split()[0][0] == '#': continue
+            temp_event = line.split()
+            events.append((temp_event[0], float(temp_event[5]), float(temp_event[6]), float(temp_event[7])))
+    '''
     '''
     Setupping simulation
     '''
@@ -72,14 +80,15 @@ if __name__ == '__main__':
     '''
     #TA energy from "An extremely energetic cosmic ray observed by a surface detector array", Auger from other article check Telegram
     initial_lats, initial_lons, all_events_lats, all_events_lons = runSimulation(sim, obs, events, seed=42, 
-                                                                                 sigma_energy = (0.07, 0.15), sigma_dir = (0.002, 0.003), 
-                                                                                 num_of_sims = 100)#, unique_event = 3)
+                                                                                 #sigma_energy = (0.07, 0.15), sigma_dir = (0.002, 0.003),
+                                                                                 sigma_energy = (0.07, 0.07), sigma_dir = (0.002, 0.002),  
+                                                                                 num_of_sims = 10)#, unique_event = 3)
 
     '''
     GATHERING DATA
     '''
 
-    total_results = makeDF(all_events_lats, all_events_lons, num_events=59)#num_events=28)
+    total_results = makeDF(all_events_lats, all_events_lons, num_events=len(events))#num_events=59)#num_events=28)
     #total_results.to_csv('results_100sims_all_events.csv')
     _ = [i for i in zip(initial_lats, initial_lons)]
     coords_df = pd.DataFrame(_, columns=['lats', 'lons'])
@@ -92,7 +101,7 @@ if __name__ == '__main__':
     map.setSaveName('test.png')
     map.setTitle("Events from PA + TA observatories with E > 100 EeV")
     map.setSourcesFlags({'mags': True, 'sbgs': True, 'clusts': True})
-    map.plotMap(sim = True, transform=True, sgr=True, legend=False, saving=True, custom_frame=False)
+    map.plotMap(sim = True, transform=True, sgr=True, shapley=True, legend=False, saving=True, custom_frame=False)
 
     '''
     Saving results
