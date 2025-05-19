@@ -63,7 +63,7 @@ if __name__ == '__main__':
     Sim for 4 particles for 1 event(third one)
     '''
     #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
-    particles = [- nucleusId(12,6)]
+    particles = [- nucleusId(1,1)]
     events_in_void = [16, 18, 19, 20, 22, 23, 24, 25, 30]
     triplet = [22, 23, 30]
     sigma_energy = (0.07, 0.15)
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
         sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
         NUM_OF_SIMS = 1000
-        output = MyTrajectoryOutput(f'trajectories_data/C/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims_CORRECTED.txt')
+        output = MyTrajectoryOutput(f'trajectories_data/H/traj_PA+TA_H_{event_idx}_event_{NUM_OF_SIMS}sims_CORRECTED.txt')
         sim.add(output)
 
         event = events[event_idx]

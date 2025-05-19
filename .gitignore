@@ -1,4 +1,5 @@
 __pycache__/
+git_API.txt
 data/AugerApJS2022_Yr_JD_UTC_Th_Ph_RA_Dec_E_Expo.dat:Zone.Identifier
 data/AugerApJS2022_log_E_over_20_observ_data.dat:Zone.Identifier
 data/InkedREFERENCE_FOR_TA_DATA.jpg:Zone.Identifier
@@ -30,3 +31,14 @@ trajectories_data/
 data/Auger_lowE_shapley.dat
 shapley_pipeline/Auger_lowE_shapley.dat
 shapley_pipeline/auger+TA_combined.dat
+shapley_pipeline/paper_plots
+shapley_pipeline/ccmA.png
+shapley_pipeline/shapley_with_radii.csv
+shapley_pipeline/SSC_clusters.txt
+shapley_pipeline/test_detections.txt
+shapley_pipeline/test_detections_1model.txt
+shapley_pipeline/test_final_directions.txt
+shapley_pipeline/test_final_directions_1model.txt
+shapley_pipeline/test_trajectories_inner.txt
+shapley_pipeline/test_trajectories.txt
+shapley_pipeline/test_trajectories_1model.txt

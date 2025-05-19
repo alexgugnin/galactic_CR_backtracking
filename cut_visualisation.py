@@ -278,10 +278,10 @@ def plot2D_projection(x, z, target, radius, xyz_kde, save_name=None) -> None:
     '''
 
 if __name__ == '__main__':
-    particle = 'C'
+    particle = 'H'
     event_num = 23
     object_name = 'sgr'
-    data = np.genfromtxt(f'trajectories_data/C/traj_PA+TA_{particle}_{event_num}_event_1000sims_CORRECTED.txt', unpack=True, skip_footer=1)
+    data = np.genfromtxt(f'trajectories_data/{particle}/traj_PA+TA_{particle}_{event_num}_event_1000sims_CORRECTED.txt', unpack=True, skip_footer=1)
     objects_list, d_list = get_objects_list()
     
     obj_cords = objects_list[object_name]
