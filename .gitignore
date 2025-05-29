@@ -35,10 +35,4 @@ shapley_pipeline/paper_plots
 shapley_pipeline/ccmA.png
 shapley_pipeline/shapley_with_radii.csv
 shapley_pipeline/SSC_clusters.txt
-shapley_pipeline/test_detections.txt
-shapley_pipeline/test_detections_1model.txt
-shapley_pipeline/test_final_directions.txt
-shapley_pipeline/test_final_directions_1model.txt
-shapley_pipeline/test_trajectories_inner.txt
-shapley_pipeline/test_trajectories.txt
-shapley_pipeline/test_trajectories_1model.txt
+shapley_pipeline/sim_results
