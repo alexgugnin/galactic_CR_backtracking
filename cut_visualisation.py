@@ -302,35 +302,4 @@ if __name__ == '__main__':
     print(f"\n Num of trajectories: {count}, Hit is :{hit}, KDE score is : {score}")
     plot2D_projection(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, xyz_colormesh_kde,)
                       #f'paper_results/projections/eng_pres_scatter.jpeg')
-
-    '''3D VOLUME APPROACH'''
-    '''
-    I,X,Y,Z = data
-    volume_radii = 0.5#kpc
-    impact_radii = np.pi*d_list[object_name]/180
-    print(impact_radii)
-    sphere_cords = pd.DataFrame({'x': np.empty(1), 
-                          'y': np.empty(1), 
-                          'z': np.empty(1)})
-    for i in tqdm(np.unique(I)):
-        temp_data = pd.DataFrame({'x': np.array(X[I == i]), 
-                                  'y': np.array(Y[I == i]), 
-                                  'z': np.array(Z[I == i])})
-        temp_data = temp_data[(temp_data['x'].between(obj_cords[1]-volume_radii, obj_cords[1]+volume_radii, inclusive=True)) & 
-                              (temp_data['y'].between(obj_cords[2]-volume_radii, obj_cords[2]+volume_radii, inclusive=True)) & 
-                              (temp_data['z'].between(obj_cords[3]-volume_radii, obj_cords[3]+volume_radii, inclusive=True))]
-        sphere_cords = pd.concat([sphere_cords, temp_data]).reset_index().drop(['index'], axis=1)
-    
-    #sphere_cords = sphere_cords.drop([0]).reset_index() RAZOBRATSIA
-    obj_volume = sphere_cords[(sphere_cords['x'].between(obj_cords[1]-impact_radii, obj_cords[1]+impact_radii, inclusive=True)) & 
-                           (sphere_cords['y'].between(obj_cords[2]-impact_radii, obj_cords[2]+impact_radii, inclusive=True)) & 
-                           (sphere_cords['z'].between(obj_cords[3]-impact_radii, obj_cords[3]+impact_radii, inclusive=True))]
-    print(obj_volume.shape, sphere_cords.shape)
-    print(f"SCORE IS {obj_volume.shape[1]/sphere_cords.shape[1]}")
-    fig = plt.figure(figsize=(12,12))
-    ax = plt.subplot(111, projection='3d')
-    ax.scatter(sphere_cords['x'], sphere_cords['y'], sphere_cords['z'], s=30)
-    ax.scatter(obj_cords[1], obj_cords[2], obj_cords[3], marker='+', c='r', s=70)
-    plt.show()
-    '''
     

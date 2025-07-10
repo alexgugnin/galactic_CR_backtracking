@@ -7,7 +7,7 @@ with open('Auger_lowE_shapley.dat', 'w') as outf:
         for line in infile:
             if line.split()[0][0] == '#': continue
             temp_event = line.split()
-            if float(temp_event[7]) < 50.0: continue #Limiting energies to be from lgE_min = 19.7 - phys constraints
+            #if float(temp_event[7]) < 50.0: continue #Limiting energies to be from lgE_min = 19.7 - phys constraints
             cords = SkyCoord(ra=float(temp_event[5])*u.deg, dec=float(temp_event[6])*u.deg, frame='icrs').transform_to("galactic")
             #if cords.l.value > 270 and cords.l.value < 330 and cords.b.value > 15 and cords.b.value < 45:
             #if cords.l.value > 290 and cords.l.value < 320 and cords.b.value > 15 and cords.b.value < 50:

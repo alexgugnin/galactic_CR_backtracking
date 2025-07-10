@@ -8,7 +8,8 @@ from astropy.coordinates import SkyCoord
 from analyse_trajectories import visualize_3D_shapley
 from astropy.cosmology import FlatLambdaCDM
 
-cosmo = FlatLambdaCDM(H0=67.6, Om0=0.286)
+#Cosmology from https://arxiv.org/abs/2408.06153 , 
+cosmo = FlatLambdaCDM(H0=70.39, Om0=0.301)
 
 def setupInnerSimulation(seed):
     '''
@@ -465,9 +466,11 @@ def plot_kde(data, fname):
     ax = plt.subplot(111, projection = 'hammer')
     
     #KDE
-    
-    #xyz_kde = calculate_kde(-data["Init_Dir_Lon"], data["Init_Dir_Lat"])
+    #xyz_kde = calculate_kde(-data["Init_Dir_Lon"][::100], data["Init_Dir_Lat"][::100])
     xyz_kde = calculate_kde(-data["Dir_Lon"], np.pi/2 - data["Dir_CoLat"])
+    '''
+    #CONTOURS
+
     confidence_levels = [0.6827, 0.9545, 0.9973] #Make 90 or 95
     Z_flat = xyz_kde[2].flatten()
     Z_sorted = np.sort(Z_flat)[::-1]
@@ -476,6 +479,7 @@ def plot_kde(data, fname):
     levels = sorted([Z_sorted[np.searchsorted(cumsum, cl)] for cl in confidence_levels])
 
     ax.contour(xyz_kde[0], xyz_kde[1], xyz_kde[2], levels=levels, colors=['blue', 'green', 'red'])#, zorder=0)
+    '''
     mesh = ax.pcolormesh(xyz_kde[0], xyz_kde[1], xyz_kde[2], cmap='viridis')#, zorder=0)
     
 
@@ -491,6 +495,16 @@ def plot_kde(data, fname):
     #inits = ax.scatter(-data["Init_Dir_Lon"], data["Init_Dir_Lat"], marker='*', c=init_energies, 
     #            cmap='viridis', norm = colors.LogNorm(vmin = final_energies.min(), vmax = final_energies.max()),
     #            s=10, label='Observed events')
+    inits = ax.scatter(-data["Init_Dir_Lon"], data["Init_Dir_Lat"], marker='x', c='black',
+                        s=1, label='Observed events (E > 32 EeV)')
+    '''
+    init_90E = ax.scatter(-data['Init_Dir_Lon'][data['Init_Energy, EeV'] > 90.0], 
+                            data['Init_Dir_Lat'][data['Init_Energy, EeV'] > 90.0], marker='x', c='pink',
+                            s=1, label='Observed events (E > 90 EeV)')
+    '''
+    init_100E = ax.scatter(-data['Init_Dir_Lon'][data['Init_Energy, EeV'] > 90.0], 
+                            data['Init_Dir_Lat'][data['Init_Energy, EeV'] > 90.0], marker='x', c='orange',
+                            s=1, label='Observed events (E > 90 EeV)')
     
     #SHAPLEY
     shapley_coords = pd.read_csv("shapley_with_radii.csv")
@@ -503,7 +517,7 @@ def plot_kde(data, fname):
     lat = cords.galactic.b.radian
 
     distance = cosmo.comoving_distance(shapley_coords["z"]) * 1000 # as radii in kpc
-    radius_kpc = shapley_coords["R500"]*3 #3R00
+    radius_kpc = shapley_coords["R500"]*3 #3R500
     
     radius = radius_kpc / distance
     for i, lon, lat, radius in zip([i for i in range(len(lon))], -lon, lat, np.array(radius)):
@@ -511,19 +525,33 @@ def plot_kde(data, fname):
         circle._resolution = 1000
         ax.add_patch(circle)
     
-    #CENTAURUS
+    #CENTAURUS CLUSTER
+    #Cen cluster (Abell 3526) data from 2025y paper https://www.aanda.org/articles/aa/full_html/2025/02/aa50277-24/aa50277-24.html
+    cen_clust_cords = SkyCoord(l=302.4*u.deg, b=21.56*u.deg, frame='galactic')
+    cen_clust_lon = cen_clust_cords.galactic.l
+    cen_clust_lon.wrap_angle = 180 * u.deg # longitude (phi) [-pi, pi] with 0 pointing in x-direction
+    cen_clust_lon = cen_clust_lon.radian
+    cen_clust_lat = cen_clust_cords.galactic.b.radian
+
+    cen_clust_redshift = 0.0104
+    cen_clust_dist = cosmo.comoving_distance(cen_clust_redshift) * 1000 # as radii in kpc
+    cen_clust_r500 = 754.02 * 3  
+    cen_clust_radius = cen_clust_r500 / cen_clust_dist.value
+
+    clust_circle = Circle((-cen_clust_lon, cen_clust_lat), cen_clust_radius, edgecolor='purple', facecolor='none', linewidth=0.5)
+    circle._resolution = 1000
+    ax.add_patch(clust_circle)
+
+    #CEN A AGN
+    #Cen A data from https://simbad.cds.unistra.fr/simbad/sim-basic?Ident=Cen+A
     cen_gal_cords = SkyCoord(l=309.5*u.deg, b=19.4*u.deg, frame='galactic')
     cen_gal_lon = cen_gal_cords.galactic.l
     cen_gal_lon.wrap_angle = 180 * u.deg # longitude (phi) [-pi, pi] with 0 pointing in x-direction
     cen_gal_lon = cen_gal_lon.radian
     cen_gal_lat = cen_gal_cords.galactic.b.radian
-    cen_gal_r500 = 50000
-    cen_gal_dist = 100
-    cen_gal_radius = cen_gal_r500 / cen_gal_dist
-    circle = Circle((-cen_gal_lon, cen_gal_lat), cen_gal_radius, edgecolor='purple', facecolor='none', linewidth=0.5)
-    circle._resolution = 1000
-    ax.add_patch(circle)
 
+    ax.scatter(-cen_gal_lon, cen_gal_lat, marker='+', s = 10, c = 'magenta', label = 'Cen A')
+    
     #GENERAL TICKS
 
     y_tick_labels = ['-75°', '-60°', '-45°', '-30°', '-15°', '0°', '15°', '30°', '45°', '60°', '75°']
@@ -568,7 +596,7 @@ def plot_kde(data, fname):
     handles.append(legend_circle)
     labels.append('Shapley member clusters')
     handles.append(legend_circle_cen_gal)
-    labels.append('Cen A')
+    labels.append('Cen cluster (A3526)')
     plt.legend(handles=handles, labels=labels, bbox_to_anchor=(0.69, 0.8), loc='center', fontsize=3.5)
     plt.savefig(fname, dpi=600, bbox_inches='tight')
     #plt.show()
@@ -588,21 +616,35 @@ def plot_kde(data, fname):
     
     #KDE COLORBAR
     cbar = fig.colorbar(mesh, orientation='horizontal', pad=0.02)
-    cbar.set_label('Probability density value')
+    cbar.set_label(r'N$_{events}$ / $\it{sr}$', fontsize=18)
+    cbar.ax.tick_params(labelsize=14)
     #cbar.solids.set_rasterized(True)
     #cbar.solids.set_edgecolor("face")
     
     #plt.box(False)
     plt.tight_layout()
-    #plt.title("Probability density map for observed Auger events with lg(E) > 19.7")
-    #plt.title(f"Probability density map for simulated CR (Z = 1)")
-    plt.title(f"Probability density map for {fname.split('/')[1][:fname.rfind('.')]} (Z = 1)")
+    #plt.title("Density map for observed Auger events", fontsize=18)
+    plt.title(f"Density map for simulated CR (Z = 1)", fontsize=18)
     plt.savefig(fname, dpi=600, bbox_inches='tight')
     #plt.show()
     plt.close()
 
-def vis_double_kde():
-    pass
+def vis_double_kde(fname1, fname2, fname_out):
+    from PIL import Image
+
+    map_inits = Image.open(fname1)
+    map_sim = Image.open(fname2)
+
+    fig, axs = plt.subplots(1, 2, figsize=(19, 9))#, layout='constrained')
+    axs[0].imshow(map_inits, aspect='auto')
+    axs[1].imshow(map_sim, aspect='auto')
+
+    for ax in axs:
+        ax.axis('off')
+
+    fig.tight_layout()
+    fig.savefig(fname_out, dpi=600, bbox_inches='tight')
+
 
 class ShapleyTrajectoryOutput(Module):
     """
@@ -679,7 +721,7 @@ if __name__ == '__main__':
     
     '''PERFORMING SIMULATIONS INSIDE THE GALAXY'''
     
-    inner_results = innerGalacticSimulator(sigma_energy=sigma_energy, sigma_dir=sigma_dir, events=events, particle = particles['p'])
+    #inner_results = innerGalacticSimulator(sigma_energy=sigma_energy, sigma_dir=sigma_dir, events=events, particle = particles['p'])
     
     #innerGalacticVisualizer(inner_results)
     #print(inner_results.head())
@@ -703,7 +745,8 @@ if __name__ == '__main__':
     
     #visualize_3D_shapley('sim_results/test_trajectories_10_1model_p.txt')
     #innerGalacticVisualizer(inner_results, fname="paper_plots/inner_gal_base_Fe.jpeg")
-    plot_kde(inner_results, fname="paper_plots/simulated CR.jpeg")
+    #plot_kde(inner_results, fname="paper_plots/lowE_sim.jpeg")
+    vis_double_kde("paper_plots/lowE_obs.jpeg", "paper_plots/lowE_sim.jpeg", "paper_plots/lowE_combined.jpeg")
     #outerGalacticVisualizer('sim_results/outer_directions_1model_p.txt', 'sim_results/outer_detections_1model_p.txt', inner_results, 
     #                        fname="paper_plots/outer_gal_Lc1Mpc_B01nG_p.jpeg")
     

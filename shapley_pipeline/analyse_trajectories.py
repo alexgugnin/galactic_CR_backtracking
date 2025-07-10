@@ -40,11 +40,17 @@ def calculate_kde(x, y) -> Tuple[Tuple[np.array, np.array, np.array], float]:
     the max density value for this pdf
     https://gist.github.com/daleroberts/7a13afed55f3e2388865b0ec94cd80d2
     https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/'''
+    '''
+    The density value itself is not a probability — its a probability density.
+    A value of 2.5 means that the density at that point is 2.5 per unit area (or volume, depending on dimension).
+    Since density can be greater than 1, it just means the data points are concentrated more tightly in that region.
+    '''
     xz = np.vstack([x, y])
     d = xz.shape[0]
     n = xz.shape[1]
 
     #Creating grid for search and finding best estimator in terms of bandwidth
+    '''
     print('---STARTING KDE GRIDSEARCH---')
     start_time = time.time()
     grid = GridSearchCV(KernelDensity(kernel='gaussian'),
@@ -53,16 +59,21 @@ def calculate_kde(x, y) -> Tuple[Tuple[np.array, np.array, np.array], float]:
     grid.fit(xz.T)
     kde = grid.best_estimator_
     print(f"Gridsearch FINISHED in {time.time() - start_time} s.")
+    print(f"Bandwidth is {grid.best_params_}")
+    '''
+
+    #bandwidth 6 degrees
+    kde = KernelDensity(kernel='gaussian', bandwidth=6*np.pi/180).fit(xz.T)
 
     xmin = x.min() - 0.2
     xmax = x.max() + 0.4
     ymin = y.min() - 0.2
     ymax = y.max() + 0.2
 
-    X, Y = np.mgrid[xmin:xmax:1000j, ymin:ymax:1000j]
+    X, Y = np.mgrid[xmin:xmax:600j, ymin:ymax:600j]
     positions = np.vstack([X.ravel(), Y.ravel()])
 
-    Z = np.reshape(np.exp(kde.score_samples(positions.T)), X.shape)
+    Z = np.reshape(np.exp(kde.score_samples(positions.T)), X.shape) * len(xz.T) # MULTIPLYING BY NUM OF EVENTS TO ACHIEVE NUM OF EVENTS PER STERRAD
 
     return (X, Y, Z) #score_samples returns the log density, so exp is needed. Also prob density can be more than 1
 

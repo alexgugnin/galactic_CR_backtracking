@@ -36,3 +36,7 @@ shapley_pipeline/ccmA.png
 shapley_pipeline/shapley_with_radii.csv
 shapley_pipeline/SSC_clusters.txt
 shapley_pipeline/sim_results
+data/make_dataset_2024_PA.py
+data/notebook/
+data/summary_release_3/
+shapley_pipeline/intro_plot.py
