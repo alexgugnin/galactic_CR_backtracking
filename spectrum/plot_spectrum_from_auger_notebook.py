@@ -3,9 +3,30 @@ import numpy as np
 import scipy.stats
 from scipy import stats
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+def msbpl(E, J0, gamma1, gamma2, gamma3, E2, E3, delta1=0.1, delta2=0.1, E1=10**18.6):
+    """
+    Multi-smoothly broken power-law (3 segments).
+    """
+    term1 = (E / E1) ** (-gamma1)
+    break1 = (1 + (E / E2)**((gamma2 - gamma1) / delta1)) ** (-delta1)
+    break2 = (1 + (E / E3)**((gamma3 - gamma2) / delta2)) ** (-delta2)
+
+    return J0 * term1 * break1 * break2
+
+def curve_fit_for_msbpl(E, J_obs, J_lower, J_upper):
+    # Initial guess
+    p0 = [1e-24, 2.5, 3.0, 5.0, 1e19, 5e19]
+
+    # Fit
+    popt, pcov = curve_fit(msbpl, E, J_obs, sigma=0.5 * (J_upper - J_lower), p0=p0, maxfev=10000,
+                           absolute_sigma=True)#ASSUMPTION OF SYMMETRIC ERRORS, CHANGE!!!
+
+    return popt
 
 def plot_figure(cut_nz, flux_E3, flux_E3_lower, flux_E3_upper, cut_z, FC_CL_E3, bin_energy18, 
-                cut_nzi, flux_E3_i, flux_E3_lower_i, flux_E3_upper_i, bin_energy18_i,
+                cut_nzi, flux_E3_i, flux_E3_lower_i, flux_E3_upper_i, bin_energy18_i,#popt
                 #bin_energy18_LE, cut_nzLE, flux_LE, flux_lower_LE, flux_upper_LE, cut_zLE, FC_CL_LE, 
                 ):
     Y_0val2 = FC_CL_E3 * 0.6
@@ -18,17 +39,18 @@ def plot_figure(cut_nz, flux_E3, flux_E3_lower, flux_E3_upper, cut_z, FC_CL_E3, 
     #plt.errorbar(bin_energy18_LE[cut_zLE], FC_CL_LE, Y_0val_LE, uplims=True, marker="None", color="orange", 
     #            markeredgecolor="r", markerfacecolor="r", linewidth=2.0, linestyle="None", capsize=5)
     
+    #plt.loglog(bin_energy18[cut_nz], msbpl(bin_energy18[cut_nz], *popt), label='MSBPL Fit', c='r')
     plt.errorbar(bin_energy18[cut_nz], flux_E3, [flux_E3_lower, flux_E3_upper], fmt="o", label='vertical sample 0$^{\circ}$- 60$^{\circ}$')
     plt.errorbar(bin_energy18[cut_z], FC_CL_E3, Y_0val2, uplims=True, barsabove=True, marker="None", color="steelblue",
-                markeredgecolor="r", markerfacecolor="r", linewidth=2.0, linestyle="None", capsize=5)
+                markeredgecolor="r", markerfacecolor="r", linewidth=2.0, linestyle="None", capsize=5)#?
 
     plt.errorbar(bin_energy18_i[cut_nzi], flux_E3_i, [flux_E3_lower_i, flux_E3_upper_i], fmt="o", label='inclined sample 60$^{\circ}$- 80$^{\circ}$', color="orange")
 
-    #plt.xlim(2.3e18, 1.5e20)
+    plt.xlim(2.3e9, 1.5e11)
     #plt.ylim(1e36, 1e39)
     plt.xscale("log")
     plt.yscale("log")
-    plt.xlabel('E [eV]')
+    plt.xlabel('E [GeV]')
     plt.ylabel(r'E$^{3} $J$^{Raw}$(E) [cm$^{-2}$ $\times$ sr$^{-1}$ s$^{-1}$ GeV$^{2}$]')
 
     plt.legend()
@@ -146,9 +168,14 @@ if __name__ == "__main__":
     FC_CL_i    = FC_90CL_0 / normalization_i[cut_zi]
     FC_CL_E3_i = FC_CL_i * bin_energy18_3_i[cut_zi]
 
+    #popt = curve_fit_for_msbpl(bin_energy18[cut_nz], flux_E3, flux_E3_lower, flux_E3_upper)
     plot_figure(cut_nz, flux_E3, flux_E3_lower, flux_E3_upper, cut_z, FC_CL_E3, bin_energy18, 
-                cut_nzi, flux_E3_i, flux_E3_lower_i, flux_E3_upper_i, bin_energy18_i)
+                cut_nzi, flux_E3_i, flux_E3_lower_i, flux_E3_upper_i, bin_energy18_i,)
+                #popt)
     exit()
+
+
+
     '''
     Same procedure for SD750
     '''

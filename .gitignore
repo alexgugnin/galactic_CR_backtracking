@@ -40,3 +40,6 @@ data/make_dataset_2024_PA.py
 data/notebook/
 data/summary_release_3/
 shapley_pipeline/intro_plot.py
+spectrum/data_from_image.csv
+spectrum/data_from_image_rescaled.csv
+spectrum/plot-data.csv:Zone.Identifier
