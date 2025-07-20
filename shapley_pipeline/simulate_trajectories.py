@@ -460,6 +460,7 @@ def plot_kde(data, fname):
     import matplotlib.colors as colors
     from matplotlib.patches import Circle
     from matplotlib.lines import Line2D
+    import matplotlib.ticker as mticker
     from analyse_trajectories import calculate_kde
 
     plt.figure(figsize=(16,9))
@@ -496,7 +497,7 @@ def plot_kde(data, fname):
     #            cmap='viridis', norm = colors.LogNorm(vmin = final_energies.min(), vmax = final_energies.max()),
     #            s=10, label='Observed events')
     inits = ax.scatter(-data["Init_Dir_Lon"], data["Init_Dir_Lat"], marker='x', c='black',
-                        s=1, label='Observed events (E > 32 EeV)')
+                        s=1, label='Observed events (E > 50 EeV)')
     '''
     init_90E = ax.scatter(-data['Init_Dir_Lon'][data['Init_Energy, EeV'] > 90.0], 
                             data['Init_Dir_Lat'][data['Init_Energy, EeV'] > 90.0], marker='x', c='pink',
@@ -616,6 +617,10 @@ def plot_kde(data, fname):
     
     #KDE COLORBAR
     cbar = fig.colorbar(mesh, orientation='horizontal', pad=0.02)
+    #def thousands_formatter(x, pos):
+    #    return f"{int(x):,}"
+    #cbar.ax.yaxis.set_major_formatter(mticker.FuncFormatter(thousands_formatter))
+    cbar.ax.xaxis.set_major_formatter(mticker.StrMethodFormatter('{x:,.0f}'))
     cbar.set_label(r'N$_{events}$ / $\it{sr}$', fontsize=18)
     cbar.ax.tick_params(labelsize=14)
     #cbar.solids.set_rasterized(True)
@@ -745,8 +750,8 @@ if __name__ == '__main__':
     
     #visualize_3D_shapley('sim_results/test_trajectories_10_1model_p.txt')
     #innerGalacticVisualizer(inner_results, fname="paper_plots/inner_gal_base_Fe.jpeg")
-    #plot_kde(inner_results, fname="paper_plots/lowE_sim.jpeg")
-    vis_double_kde("paper_plots/lowE_obs.jpeg", "paper_plots/lowE_sim.jpeg", "paper_plots/lowE_combined.jpeg")
+    #plot_kde(inner_results, fname="paper_plots/highE_sim.jpeg")
+    vis_double_kde("paper_plots/highE_obs.jpeg", "paper_plots/highE_sim.jpeg", "paper_plots/highE_combined.jpeg")
     #outerGalacticVisualizer('sim_results/outer_directions_1model_p.txt', 'sim_results/outer_detections_1model_p.txt', inner_results, 
     #                        fname="paper_plots/outer_gal_Lc1Mpc_B01nG_p.jpeg")
     
