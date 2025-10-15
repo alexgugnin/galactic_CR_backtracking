@@ -63,25 +63,25 @@ if __name__ == '__main__':
     Sim for 4 particles for 1 event(third one)
     '''
     #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
-    particles = [- nucleusId(1,1)]
+    particles = [- nucleusId(12,6)]
     events_in_void = [16, 18, 19, 20, 22, 23, 24, 25, 30]
     triplet = [22, 23, 30]
     sigma_energy = (0.07, 0.15)
     sigma_dir = (0.002, 0.003) #1, 1.5 degree directional uncertainty
 
-    for event_idx in tqdm(events_in_void):
+    for event_idx in tqdm(triplet):
         # simulation setup
         sim = ModuleList()
         sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
         sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
         NUM_OF_SIMS = 1000
-        output = MyTrajectoryOutput(f'trajectories_data/H/traj_PA+TA_H_{event_idx}_event_{NUM_OF_SIMS}sims_CORRECTED.txt')
+        output = MyTrajectoryOutput(f'trajectories_data/C/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
         sim.add(output)
 
         event = events[event_idx]
 
         mean_energy = event[3] * EeV
-        position = Vector3d(-8.2, 0, 0.0208) * kpc
+        position = Vector3d(-8.122, 0, 0.0208) * kpc #Astropy in built params to match transformation
 
         #lon0,lat0 = eqToGal(event[1], event[2])        #RETURN WHEN NO TEST
         coords = SkyCoord(ra=event[1], dec=event[2], frame='icrs', unit='deg')

@@ -43,3 +43,4 @@ shapley_pipeline/intro_plot.py
 spectrum/data_from_image.csv
 spectrum/data_from_image_rescaled.csv
 spectrum/plot-data.csv:Zone.Identifier
+harvard_conference_plots/

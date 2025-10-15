@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from cut_visualisation import get_objects_list
 
-def plot2DProjection(data, title = '', fname = None) -> None:
+def plot2DProjection_standalone_image(data, title = '', fname = None) -> None:
     plt.ioff() # Turn off interactive mode to speed up building
     plt.figure(figsize=(6,8))
 
@@ -72,6 +72,89 @@ def plot2DProjection(data, title = '', fname = None) -> None:
     if fname: plt.savefig(fname, dpi=300, bbox_inches='tight')
     plt.show()
 
+def plot2DProjection_axes_version(ax, data, title = '', fname = None) -> None:
+    cb_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
+                  '#f781bf', '#a65628', '#984ea3',
+                  '#999999', '#e41a1c', '#dede00']
+    
+    I,X,Y,Z = data
+    
+    for i in np.unique(I):
+        ax.plot(X[I == i], Y[I == i], lw=0.05, alpha=0.1, color=cb_color_cycle[0], zorder=-1)
+
+    objects_list, d_list = get_objects_list()
+    # plot Galactic border
+    #r = 20
+    #u, v = np.meshgrid(np.linspace(0, 2*np.pi, 100), np.linspace(0, np.pi, 100))
+    #x = r * np.cos(u) * np.sin(v)
+    #y = r * np.sin(u) * np.sin(v)
+    #z = r * np.cos(v)
+    #plt.plot_surface(x, y, rstride=2, cstride=2, color='r', alpha=0.1, lw=0)
+    #plt.plot_wireframe(x, y, rstride=10, cstride=10, color='k', alpha=0.5, lw=0.3)
+
+    # plot Galactic center
+    ax.scatter(0,0, marker='o', color=cb_color_cycle[7], alpha=0.5, zorder = 1)
+    ax.text(0+0.2, 0+0.1, s="Galactic center", fontsize=12, c=cb_color_cycle[7], zorder=1)
+    # plot Earth
+    earth_cords = [0, -8.122, 0, 0.0208]
+    ax.scatter(earth_cords[1], earth_cords[2], marker='P', color=cb_color_cycle[5], zorder = 1)
+    ax.text(earth_cords[1]+0.5, earth_cords[2], s="Earth", fontsize=12, c=cb_color_cycle[5], zorder=1)
+    #Plot SGR 1900+14
+    sgr_cords = objects_list["sgr"]
+    ax.scatter(sgr_cords[1], sgr_cords[2], marker='*', c=cb_color_cycle[1], s=90, zorder=1) #43.02 0.77 12.5±1.7
+    ax.text(sgr_cords[1]-1.3, sgr_cords[2]+0.5, s="SGR 1900+14", fontsize=12, c=cb_color_cycle[1], zorder=1)
+    #Plot GRS 1915+105
+    grs_cords = objects_list["grs"]
+    ax.scatter(grs_cords[1], grs_cords[2], marker='*', c=cb_color_cycle[2], s=90, zorder=1) #45.37 -0.22 8.6+2.0-1.6
+    ax.text(grs_cords[1]-5.0, grs_cords[2]+0.4, s="GRS 1915+105", fontsize=12, c=cb_color_cycle[2], zorder=1)
+    #Plot SS 433 Мікроквазар 39.69 -2.24 5.5±0.2
+    ss_cords = objects_list["ss"]
+    ax.scatter(ss_cords[1], ss_cords[2], marker='*', c=cb_color_cycle[3], s=90, zorder=1) #39.69 -2.24 5.5±0.2
+    ax.text(ss_cords[1]-3, ss_cords[2]-0.6, s="SS 433", fontsize=12, c=cb_color_cycle[3], zorder=1)
+    #Plot NGC 6760 Кулясте скупчення 36.11 -3.9 7.4±0.4
+    ngc_cords = objects_list["ngc"]
+    ax.scatter(ngc_cords[1], ngc_cords[2], marker='*', c=cb_color_cycle[4], s=90, zorder=1) #36.11 -3.9 7.4±0.4
+    ax.text(ngc_cords[1]+0.6, ngc_cords[2]-0.6, s="NGC 6760", fontsize=12, c=cb_color_cycle[4], zorder=1)
+    
+    '''
+    from matplotlib.lines import Line2D
+    legend_elements = [
+                        Line2D([0], [0], marker='*', color=cb_color_cycle[1], label='SGR 1900+14', markerfacecolor=cb_color_cycle[1], linestyle='', markersize=8),
+                        Line2D([0], [0], marker='*', color=cb_color_cycle[2], label='GRS 1915+105', markerfacecolor=cb_color_cycle[2], linestyle='', markersize=8),
+                        Line2D([0], [0], marker='*', color=cb_color_cycle[3], label='SS 433', markerfacecolor=cb_color_cycle[3], linestyle='', markersize=8),
+                        Line2D([0], [0], marker='*', color=cb_color_cycle[4], label='NGC 6760', markerfacecolor=cb_color_cycle[4], linestyle='', markersize=8),
+                        Line2D([0], [0], marker='P', color=cb_color_cycle[5], label='Earth', markerfacecolor=cb_color_cycle[5], linestyle='', markersize=8),
+                        Line2D([0], [0], marker='o', color=cb_color_cycle[7], label='Galaxy Center', markerfacecolor=cb_color_cycle[7], linestyle='', markersize=8),
+                        ]
+    plt.legend(handles=legend_elements, loc='upper right')
+    '''
+    
+    ax.set_xlim([-8.5, 7.5])
+    ax.set_ylim([-0.5, 12.5])
+    ax.set_xlabel(f"X / kpc", fontsize = 14)
+    ax.set_ylabel(f"Y / kpc", fontsize = 14)
+    ax.tick_params(axis='both', labelsize=14)
+
+def plot_triplet(data_22, data_23, data_30, title, savename):
+    # Create a figure with a row of 3 subplots
+    fig, axes = plt.subplots(1, 3, figsize=(16, 9), sharey=True)
+
+    data_available = [data_22, data_23, data_30]
+
+    for idx, data in enumerate(data_available):
+        plot2DProjection_axes_version(axes[idx], data, title='')
+
+    # Set a main title for the entire figure
+    fig.suptitle(title, fontsize=20)
+    
+    # Adjust layout to prevent titles and labels from overlapping
+    plt.tight_layout()#rect=[0, 0, 1, 0.96])
+    
+    # Save the figure to a file
+    plt.savefig(savename, dpi=600, bbox_inches='tight')
+    
+    # Show the final plot
+    plt.show()
 
 def plotAll2DProjections(data, title:str = '', fname:str = None) -> None:
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16, 4))
@@ -188,11 +271,15 @@ def plot3D(data) -> None:
 
 if __name__ == '__main__':
     # plot 3D
-    data_22 = np.genfromtxt('trajectories_data/C/traj_PA+TA_C_22_event_1000sims.txt', unpack=True, skip_footer=1)
-    #data_23 = np.genfromtxt('trajectories/C/traj_PA+TA_Fe_23_event_1000sims.txt', unpack=True, skip_footer=1)
-    #data_30 = np.genfromtxt('trajectories/C/traj_PA+TA_Fe_30_event_1000sims.txt', unpack=True, skip_footer=1)
+    data_22 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_22_event_1000sims.txt', unpack=True, skip_footer=1)
+    data_23 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_23_event_1000sims.txt', unpack=True, skip_footer=1)
+    data_30 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_30_event_1000sims.txt', unpack=True, skip_footer=1)
+
+    plot_triplet(data_22=data_22, data_23=data_23, data_30=data_30, 
+                 title = "Trajectories for the Telescope Array event pair (left and middle) and Pierre Auger event (right) \n in the galactic plane for Z = 1",
+                 savename = "harvard_conference_plots/three_projections_H.jpeg")
     #plot3D(np.genfromtxt('galactic_trajectories_with_uncert_with_random_4types.txt', unpack=True, skip_footer=1))
-    plot2DProjection(data_22, title = "Trajectories for the TA top event in the galactic plane for Z = 6", fname = 'paper_results/trajectories/eng_pres_traj_alpha_linewidth.jpeg')
+    #plot2DProjection_standalone_image(data_22, title = "Trajectories for the TA top event in the galactic plane for Z = 6", fname = 'paper_results/trajectories/eng_pres_traj_alpha_linewidth.jpeg')
     #plotAll2DProjections(data_22, title = "All three projections for the simulated CR with Z = 6 and random striated+turbulent field for the TA event (top)")#, fname = "Fe_comb_22event_3projections.png")
     #plotAll2DProjections(data_23, title = "All three projections for the simulated CR with Z = 26 and random striated+turbulent field for the TA event (bottom)", fname = "Fe_comb_23event_3projections.png")
     #plotAll2DProjections(data_30, title = "All three projections for the simulated CR with Z = 26 and random striated+turbulent field for the PA event", fname = "Fe_comb_30event_3projections.png")

@@ -55,7 +55,7 @@ def get_objects_list():
         "ngc": [0, g_ngc.x.value, g_ngc.y.value, g_ngc.z.value]
     }
 
-    return objects_list, d_list
+    return objects_list, d_list, object_coords
 
 def plot3D(data, objects) -> None:
     fig = plt.figure(figsize=(12,12))
@@ -200,7 +200,7 @@ def plot3D_from_pandas(data, data_cut, objects, target_transformed = None, norms
     if save_file is not None: plt.savefig(save_file, dpi=300, bbox_inches='tight')
     plt.show()
 
-def plot2D_projection(x, z, target, radius, xyz_kde, save_name=None) -> None:
+def plot2D_projection_orthogonal(x, z, target, radius, xyz_kde, save_name=None) -> None:
     import seaborn as sns
     '''Func for plotting XZ projection with target object and 1 degree circle around it'''
 
@@ -277,29 +277,74 @@ def plot2D_projection(x, z, target, radius, xyz_kde, save_name=None) -> None:
     plt.show()
     '''
 
+def plot2D_projection_equatorial_nonrot(ra, dec, target, radius, radec_kde, save_name=None) -> None:
+    import seaborn as sns
+    '''Func for plotting RA DEC projection with target object and 1 degree circle around it'''
+
+    theta = np.linspace(0, 2 * np.pi, 100)  # Angles from 0 to 2*pi
+    ra_circle = target['RA'] + radius * np.cos(theta)  # RA coordinates of the circle
+    dec_circle = target['DEC'] + radius * np.sin(theta)  # DEC coordinates of the circle
+
+    # Plot the circle
+    plt.figure(figsize=(12, 8))
+    plt.plot(ra_circle, dec_circle, label=f'Circle (r={radius})', c='r')
+
+    '''Simple 2D scatterplot'''
+
+    plt.scatter(ra, dec, s=5, label="Trajectories crossing the object's plane")
+    plt.scatter(target['RA'], target['DEC'], c='r', label='Target object')
+    plt.text(target['RA']-0.15, target['DEC']+0.06, 'SGR 1900+14', fontsize=10, fontweight='bold', c = 'red')
+    plt.xlabel("RA, degrees")
+    plt.ylabel("Dec, degrees")
+    if save_name:
+        plt.savefig(save_name, dpi=300, bbox_inches='tight')
+    plt.legend()
+    plt.show()
+
 if __name__ == '__main__':
-    particle = 'H'
-    event_num = 23
+    particle = 'C'
+    event_num = 30
     object_name = 'sgr'
-    data = np.genfromtxt(f'trajectories_data/{particle}/traj_PA+TA_{particle}_{event_num}_event_1000sims_CORRECTED.txt', unpack=True, skip_footer=1)
-    objects_list, d_list = get_objects_list()
-    
+    data = np.genfromtxt(f'trajectories_data/{particle}/traj_PA+TA_{particle}_{event_num}_event_1000sims.txt', unpack=True, skip_footer=1)
+    objects_list, d_list, object_cords_eqatorial = get_objects_list()
+
     obj_cords = objects_list[object_name]
     '''
     2D SURFACE APPROACH
     '''
-    data_cut, obj_cords_transformed, norms = makeCut(data, obj_cords, rot=True)
+    #data_cut, obj_cords_transformed, norms = makeCut(data, obj_cords, rot=True)
+    data_cut = makeCut(data, obj_cords, rot=False)
     plot3D(data, objects_list)
-    #print(data_cut['Y'])
-    #print(norms)
-    #data_cut_unrot, _ = makeCut(data, obj_cords, rot=False)
     #plot3D(data, objects_list)
     #plot3D_from_pandas(data, data_cut_unrot, objects_list)
     #plot3D_from_pandas(data, data_cut, objects_list, target_transformed=obj_cords_transformed, norms=norms)#, save_file=f'paper_results/trajectories/event_{event_num}_{object_name}_{particle}_3Dmap.jpeg')
+    
     xyz_colormesh_kde, score = 0,0#calculate_kde(data_cut, obj_cords_transformed)
-    count, hit = calculate_hit(data_cut, obj_cords_transformed, np.pi*d_list[object_name]/180)
+    #count, hit = calculate_hit(data_cut, obj_cords_transformed, np.pi*d_list[object_name]/180)
+    count, hit = calculate_hit(data_cut, obj_cords, np.pi*d_list[object_name]/180)
+
     #mah_dist = calculate_mahalanobis(data_cut, obj_cords_transformed)
     print(f"\n Num of trajectories: {count}, Hit is :{hit}, KDE score is : {score}")
-    plot2D_projection(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, xyz_colormesh_kde,)
-                      #f'paper_results/projections/eng_pres_scatter.jpeg')
+    #plot2D_projection_orthogonal(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, xyz_colormesh_kde,)
+                      #f'harvard_conference_plots/30_C_SGR_scatter.jpeg')
     
+    #TRANSFORM GALACTOCENTRIC TO EQUATORIAL
+    galactocentric_coords = SkyCoord(
+        x=data_cut['X'] * u.kpc,
+        y=data_cut['Y'] * u.kpc,
+        z=data_cut['Z'] * u.kpc,
+        representation_type = 'cartesian',
+        frame = 'galactocentric'
+    )
+
+    #Transform the coordinates to the Galactic frame
+    galactic_coords = galactocentric_coords.transform_to('galactic')
+
+    #Transform the Galactic coordinates to the Equatorial frame (ICRS)
+    equatorial_coords = galactic_coords.transform_to('icrs')
+
+    # Extract Right Ascension and Declination in degrees
+    ra = equatorial_coords.ra.deg
+    dec = equatorial_coords.dec.deg
+
+    plot2D_projection_equatorial_nonrot(ra, dec, object_cords_eqatorial["sgr"], np.pi*d_list[object_name]/180, xyz_colormesh_kde,)

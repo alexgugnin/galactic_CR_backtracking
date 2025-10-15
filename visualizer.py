@@ -210,7 +210,7 @@ class SimMap(object):
         plt.figure(figsize=self.figsize)
         plt.subplot(111, projection = self.projection)
         plt.grid(True)
-        plt.title(self.title, y=1.05)
+        plt.title(self.title, fontsize = 12)#, y=1.05)
 
         #Plotting simulations
         if sim:
@@ -228,11 +228,11 @@ class SimMap(object):
             lons, lats = inits_transform(self.initial_lons, self.initial_lats)
             #ta_lons, ta_lats = [lons[16], lons[18], lons[19], lons[20], lons[22], lons[23], lons[24], lons[25]], [lats[16], lats[18], lats[19], lats[20], lats[22], lats[23], lats[24], lats[25]]
             #pa_lons, pa_lats = [lons[30]], [lats[30]]
-            #ta_lons, ta_lats = lons[:28], lats[:28]
-            #pa_lons, pa_lats = lons[28:], lats[28:]
-            pa_lons, pa_lats = lons, lats
+            ta_lons, ta_lats = lons[:28], lats[:28]
+            pa_lons, pa_lats = lons[28:], lats[28:]
+            #pa_lons, pa_lats = lons, lats
             plt.scatter(pa_lons, pa_lats, marker='*', c='orange', s=50)
-            #plt.scatter(ta_lons, ta_lats, marker='*', c='gold', s=50)
+            plt.scatter(ta_lons, ta_lats, marker='*', c='gold', s=50)
         else:
             plt.scatter(self.initial_lons, self.initial_lats, marker='*', c='orange', s=50)
         #Plotting sources
@@ -276,6 +276,16 @@ class SimMap(object):
                 plt.contour(X,Y,F,[0],colors='purple',linewidths=0.75)
                 self.plotClustNames(lons, lats, clust_names)
 
+        #TRIPLET CONTOUR
+        x = np.linspace(-np.pi, np.pi, 10000)
+        y = np.linspace(-np.pi/2, np.pi/2, 10000)
+        X, Y = np.meshgrid(x,y)
+
+        F = (X-(0.751-2*0.751 + 10*np.pi/180))**2 + (Y - (0.0135 - 3*np.pi/180))**2 - (5*np.pi/180)**2
+        plt.contour(X,Y,F,[0],colors='red',linewidths=0.75)
+        plt.text(0.751-2*0.751 - 5*np.pi/180, 0.0135 - 12*np.pi/180, '2 TA + 1 PA EHECR triplet', fontsize=8
+                 , fontweight='bold', color='red')
+        
         #SGR
         if sgr:
             sgr = plt.scatter(0.751-2*0.751, 0.0135, marker='+', c='red', s=70)#SGR 1900+14
@@ -296,7 +306,7 @@ class SimMap(object):
             shapley_cords = {"RA": 201.9934, "DEC": -31.5014, "z": 0.0487}
             cords = SkyCoord(ra=shapley_cords["RA"]*u.deg, dec=shapley_cords["DEC"]*u.deg, frame='icrs').transform_to("galactic")
             plt.scatter((2*np.pi*u.rad - cords.l.to(u.rad)).value, cords.b.to(u.rad).value, marker='+', c='magenta', s=70)
-            plt.text((2*np.pi*u.rad - cords.l.to(u.rad)).value, (cords.b.to(u.rad)).value + 5*np.pi/180, 
+            plt.text((2*np.pi*u.rad - cords.l.to(u.rad)).value - np.pi*3/180, (cords.b.to(u.rad)).value + 5*np.pi/180, 
                      'Shapley Center', fontsize=8, fontweight='bold')
         #Legend
         if legend: plt.legend(handles=self.makeLegend(), loc='upper right')
@@ -304,9 +314,36 @@ class SimMap(object):
         x_tick_labels = ['150°', '120°', '90°', '60°', '30°', '0°', '330°', '300°', '270°', '240°', '210°']
         x_tick_positions = [-5*np.pi/6, -2*np.pi/3, -np.pi/2, -np.pi/3, -np.pi/6, 0, np.pi/6, np.pi/3, np.pi/2, 2*np.pi/3, 5*np.pi/6]
 
-        plt.xticks(x_tick_positions, labels=x_tick_labels)
+        plt.xticks(x_tick_positions, labels=x_tick_labels, fontsize=10)
 
-        if saving: plt.savefig(self.save_name, dpi=300, bbox_inches='tight')
+        '''ONLY FOR ELLIPSE'''
+
+        y_tick_labels = ['', '', '', '', '', '', '', '', '', '', '']
+        y_tick_positions = [-75*np.pi/180, -60*np.pi/180, -45*np.pi/180, -30*np.pi/180, -15*np.pi/180, 
+                            0,  15*np.pi/180,  30*np.pi/180,  45*np.pi/180,  60*np.pi/180, 75*np.pi/180,]
+        
+        plt.yticks(y_tick_positions, labels=y_tick_labels)
+
+        #TO PLOT WITH LABELS INCIDE CIRCLE
+        yticks_crop = [-np.pi*75/180 , -np.pi*60/180, -np.pi*45/180, -np.pi*30/180, -np.pi*15/180, 0 + np.pi*1/180,
+                        np.pi*15/180, np.pi*30/180, np.pi*45/180, np.pi*60/180, np.pi*75/180] 
+        ylabels_crop = ['-75°', '-60°', '-45°', '-30°', '-15°', '0°',
+                        '15°', '30°', '45°', '60°', '75°']
+        x_cords_adjusted = [-np.pi*174/180 , -np.pi*175/180, -np.pi*176/180, -np.pi*176/180, -np.pi*177/180, -np.pi*177/180,
+                            -np.pi*175/180, -np.pi*174/180, -np.pi*169/180, -np.pi*164/180, -np.pi*140/180]
+
+        for pos, label, x_adj in zip(yticks_crop, ylabels_crop, x_cords_adjusted):
+            plt.text(x_adj, pos, label, fontsize=10)
+
+        #Hiding all the spines (the lines that form the box)
+        ax_gca = plt.gca()
+        #for spine in ax_gca.spines.values():
+        #    spine.set_visible(False)
+
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+        if saving: plt.savefig(self.save_name, dpi=300, bbox_inches='tight',
+                               pad_inches=0, transparent=True)
         plt.show()
 
 
@@ -476,5 +513,5 @@ def visualizeTotal(total_results, initial_lats:list, initial_lons:list) -> None:
     x_tick_positions = [-np.pi, -5*np.pi/6, -2*np.pi/3, -np.pi/2, -np.pi/3, -np.pi/6, 0, np.pi/6, np.pi/3, np.pi/2, 2*np.pi/3, 5*np.pi/6]
 
     plt.xticks(x_tick_positions, labels=x_tick_labels)
-    plt.savefig('base_test_sim.png', dpi=300)
+    plt.savefig('base_test_sim.png', dpi=600)
     plt.show()

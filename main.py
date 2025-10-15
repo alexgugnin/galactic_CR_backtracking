@@ -98,10 +98,10 @@ if __name__ == '__main__':
     Visualizing results achieved
     '''
     map = SimMap(total_results, initial_lats, initial_lons, particles=['H'])#['H', 'aH', 'He', 'C', 'Fe']
-    map.setSaveName('test.png')
+    map.setSaveName('harvard_conference_plots/full_map_sources.png')
     map.setTitle("Events from PA + TA observatories with E > 100 EeV")
     map.setSourcesFlags({'mags': True, 'sbgs': True, 'clusts': True})
-    map.plotMap(sim = True, transform=True, sgr=True, shapley=True, legend=False, saving=True, custom_frame=False)
+    map.plotMap(sim = False, transform=True, sgr=True, shapley=True, legend=True, saving=True, custom_frame=False)
 
     '''
     Saving results

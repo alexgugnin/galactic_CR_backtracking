@@ -115,7 +115,7 @@ def makeCut(data, target_cords, rot=True):
 
         return pd.DataFrame({'X':np.array(x_rot), 'Y':np.array(y_rot), 'Z':np.array(z_rot)}), obj_cords_transformed, norms
     else:
-        return pd.DataFrame({'X':np.array(x_nonrot), 'Y':np.array(y_nonrot), 'Z':np.array(z_nonrot)}), target_cords[:2]
+        return pd.DataFrame({'X':np.array(x_nonrot), 'Y':np.array(y_nonrot), 'Z':np.array(z_nonrot)})
 
 def calculate_kde(data, object_cords) -> Tuple[Tuple[np.array, np.array, np.array], float]:
     '''Calculates pdf using kde with bandwith from the gridsearch
