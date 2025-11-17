@@ -38,8 +38,8 @@ if __name__ == '__main__':
     seed = 42
     R = Random(seed)
     B = JF12Field()
-    B.randomStriated(seed)
-    B.randomTurbulent(seed)
+    #B.randomStriated(seed)
+    #B.randomTurbulent(seed)
 
     # simulation setup
     #sim = ModuleList()
@@ -64,8 +64,10 @@ if __name__ == '__main__':
     '''
     #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
     particles = [- nucleusId(12,6)]
+    particle_alias = 'C'
+    mag_model_alias = 'test_data'
     events_in_void = [16, 18, 19, 20, 22, 23, 24, 25, 30]
-    triplet = [22, 23, 30]
+    triplet = [30]#[22, 23, 30]
     sigma_energy = (0.07, 0.15)
     sigma_dir = (0.002, 0.003) #1, 1.5 degree directional uncertainty
 
@@ -74,8 +76,8 @@ if __name__ == '__main__':
         sim = ModuleList()
         sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
         sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
-        NUM_OF_SIMS = 1000
-        output = MyTrajectoryOutput(f'trajectories_data/C/traj_PA+TA_C_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
+        NUM_OF_SIMS = 1
+        output = MyTrajectoryOutput(f'trajectories_data/{mag_model_alias}/{particle_alias}/base/traj_PA+TA_{particle_alias}_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
         sim.add(output)
 
         event = events[event_idx]

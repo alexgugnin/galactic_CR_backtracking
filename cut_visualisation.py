@@ -13,17 +13,17 @@ from astropy.coordinates import SkyCoord
 import glob
 
 
-def get_objects_list():
-    d_list = {
+def get_objects_params():
+    distances = {
         "sgr": 12.5, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
         "grs": 8.6, #+2-1.6  https://arxiv.org/pdf/1409.2453
         "ss": 5.5, #+-0.2   https://www.aanda.org/articles/aa/full_html/2018/09/aa32488-17/aa32488-17.html
         "ngc": 7.58#       https://doi.org/10.1093/mnras/stab1475
     }
-    object_coords = {"sgr": {"RA": 286.8097083, "DEC": 9.3222500, "dist": d_list["sgr"]}, #https://arxiv.org/pdf/2412.20050
-                     "grs": {"RA": 288.798, "DEC": 10.946, "dist": d_list["grs"]},  #https://swift.gsfc.nasa.gov/results/transients/GRS1915p105/ 
-                     "ss": {"RA": 287.956, "DEC": 4.99, "dist": d_list["ss"]},      #https://swift.gsfc.nasa.gov/results/transients/SS433/
-                     "ngc": {"RA": 287.800, "DEC": 1.030, "dist": d_list["ngc"]}, #https://doi.org/10.1093/mnras/stab1475
+    object_coords_eq = {"sgr": {"RA": 286.8097083, "DEC": 9.3222500, "dist": distances["sgr"]}, #https://arxiv.org/pdf/2412.20050
+                     "grs": {"RA": 288.798, "DEC": 10.946, "dist": distances["grs"]},  #https://swift.gsfc.nasa.gov/results/transients/GRS1915p105/ 
+                     "ss": {"RA": 287.956, "DEC": 4.99, "dist": distances["ss"]},      #https://swift.gsfc.nasa.gov/results/transients/SS433/
+                     "ngc": {"RA": 287.800, "DEC": 1.030, "dist": distances["ngc"]}, #https://doi.org/10.1093/mnras/stab1475
                      }
     
     '''
@@ -34,28 +34,28 @@ def get_objects_list():
         "ngc": [0, d_list['ngc']*np.cos(36.11*np.pi/180)*np.cos(-3.9*np.pi/180) - 8.2, d_list['ngc']*np.sin(36.11*np.pi/180)*np.cos(-3.9*np.pi/180), d_list['ngc']*np.sin(-3.9*np.pi/180) + 0.0208]
     }
     '''
-    coords_sgr = SkyCoord(ra=object_coords["sgr"]["RA"]*u.deg, dec=object_coords["sgr"]["DEC"]*u.deg,
-                      distance=object_coords["sgr"]["dist"]*u.kpc, frame='icrs')
-    coords_grs = SkyCoord(ra=object_coords["grs"]["RA"]*u.deg, dec=object_coords["grs"]["DEC"]*u.deg,
-                      distance=object_coords["grs"]["dist"]*u.kpc, frame='icrs')
-    coords_ss = SkyCoord(ra=object_coords["ss"]["RA"]*u.deg, dec=object_coords["ss"]["DEC"]*u.deg,
-                      distance=object_coords["ss"]["dist"]*u.kpc, frame='icrs')
-    coords_ngc = SkyCoord(ra=object_coords["ngc"]["RA"]*u.deg, dec=object_coords["ngc"]["DEC"]*u.deg,
-                      distance=object_coords["ngc"]["dist"]*u.kpc, frame='icrs')
+    coords_sgr = SkyCoord(ra=object_coords_eq["sgr"]["RA"]*u.deg, dec=object_coords_eq["sgr"]["DEC"]*u.deg,
+                      distance=object_coords_eq["sgr"]["dist"]*u.kpc, frame='icrs')
+    coords_grs = SkyCoord(ra=object_coords_eq["grs"]["RA"]*u.deg, dec=object_coords_eq["grs"]["DEC"]*u.deg,
+                      distance=object_coords_eq["grs"]["dist"]*u.kpc, frame='icrs')
+    coords_ss = SkyCoord(ra=object_coords_eq["ss"]["RA"]*u.deg, dec=object_coords_eq["ss"]["DEC"]*u.deg,
+                      distance=object_coords_eq["ss"]["dist"]*u.kpc, frame='icrs')
+    coords_ngc = SkyCoord(ra=object_coords_eq["ngc"]["RA"]*u.deg, dec=object_coords_eq["ngc"]["DEC"]*u.deg,
+                      distance=object_coords_eq["ngc"]["dist"]*u.kpc, frame='icrs')
     
     g_sgr = coords_sgr.transform_to('galactocentric') 
     g_grs = coords_grs.transform_to('galactocentric') 
     g_ss = coords_ss.transform_to('galactocentric') 
     g_ngc = coords_ngc.transform_to('galactocentric') 
 
-    objects_list = {
+    objects_coords_galactocentric = {
         "sgr": [0, g_sgr.x.value, g_sgr.y.value, g_sgr.z.value],
         "grs": [0, g_grs.x.value, g_grs.y.value, g_grs.z.value],
         "ss": [0, g_ss.x.value, g_ss.y.value, g_ss.z.value],
         "ngc": [0, g_ngc.x.value, g_ngc.y.value, g_ngc.z.value]
     }
 
-    return objects_list, d_list, object_coords
+    return objects_coords_galactocentric, distances, object_coords_eq
 
 def plot3D(data, objects) -> None:
     fig = plt.figure(figsize=(12,12))
@@ -119,6 +119,82 @@ def plot3D(data, objects) -> None:
     ax.xaxis.set_ticks((-20,-10,0,10,20))
     ax.yaxis.set_ticks((-20,-10,0,10,20))
     ax.zaxis.set_ticks((-20,-10,0,10,20))
+    plt.show()
+
+def plot3D_zoomed(data, data_cut, target_cords, zoom_kpc=2.0):
+    '''
+    Creates a 3D plot zoomed in on the target object.
+    
+    Args:
+        data (tuple): The raw trajectory data (I, X, Y, Z)
+        data_cut (pd.DataFrame): The intersection points from makeCut
+        target_cords (list): The [0, x, y, z] coords of the *single* target
+        zoom_kpc (float): The size of the "box" to zoom in on (e.g., +/- 2 kpc)
+    '''
+    
+    fig = plt.figure(figsize=(12, 12))
+    ax = plt.subplot(111, projection='3d')
+
+    # 1. Plot trajectories (limit to 50, as before)
+    I, X, Y, Z = data
+    for i in np.unique(I):
+        #if i > 50: break
+        # Plot trajectory in light green
+        ax.plot(X[I == i], Y[I == i], Z[I == i], lw=1, alpha=0.3, c='g')
+
+    # 2. Plot the intersection points (THE "HITS")
+    ax.scatter(data_cut['X'], data_cut['Y'], data_cut['Z'], 
+               marker='x', c='k', s=50, label='Intersections')
+
+    # 3. Plot the target object (the one we are zoomed in on)
+    target_x, target_y, target_z = target_cords[1], target_cords[2], target_cords[3]
+    ax.scatter(target_x, target_y, target_z, 
+               marker='*', c='red', s=250, label='Target Object', 
+               edgecolors='black', zorder=10)
+
+    # 4. Plot Earth and Galactic Center (for context, if they are in view)
+    ax.scatter(-8.122, 0, 0.0208, marker='P', c='b', s=100, label='Earth')
+    ax.scatter(0, 0, 0, marker='o', c='k', s=100, label='Galactic Center')
+
+    # 5. Plot the target plane
+    norm, D_plane = calcPerpPlane(target_cords)
+    A, B, C = norm
+
+    # Create a grid to plot the plane. We must solve for one variable.
+    # To be robust, we solve for the variable with the largest |coefficient|
+    # This prevents dividing by zero if the plane is aligned with an axis.
+    
+    # Define a grid based on the zoomed-in coordinates
+    x_grid = np.linspace(target_x - zoom_kpc, target_x + zoom_kpc, 10)
+    y_grid = np.linspace(target_y - zoom_kpc, target_y + zoom_kpc, 10)
+    z_grid = np.linspace(target_z - zoom_kpc, target_z + zoom_kpc, 10)
+    
+    abs_coeffs = np.abs(norm)
+    if abs_coeffs[2] >= abs_coeffs[0] and abs_coeffs[2] >= abs_coeffs[1]:
+        # Plane is "flattest" in Z, solve for z(x,y)
+        xx, yy = np.meshgrid(x_grid, y_grid)
+        zz = (-A * xx - B * yy - D_plane) / C
+        ax.plot_surface(xx, yy, zz, alpha=0.2, color='cyan', rstride=1, cstride=1)
+    elif abs_coeffs[1] >= abs_coeffs[0]:
+        # Plane is "flattest" in Y, solve for y(x,z)
+        xx, zz = np.meshgrid(x_grid, z_grid)
+        yy = (-A * xx - C * zz - D_plane) / B
+        ax.plot_surface(xx, yy, zz, alpha=0.2, color='cyan', rstride=1, cstride=1)
+    else:
+        # Plane is "flattest" in X, solve for x(y,z)
+        yy, zz = np.meshgrid(y_grid, z_grid)
+        xx = (-B * yy - C * zz - D_plane) / A
+        ax.plot_surface(xx, yy, zz, alpha=0.2, color='cyan', rstride=1, cstride=1)
+
+    # 6. SET THE ZOOMED LIMITS
+    ax.set_xlim(target_x - zoom_kpc, target_x + zoom_kpc)
+    ax.set_ylim(target_y - zoom_kpc, target_y + zoom_kpc)
+    ax.set_zlim(target_z - zoom_kpc, target_z + zoom_kpc)
+
+    ax.set_xlabel('x / kpc', fontsize=18)
+    ax.set_ylabel('y / kpc', fontsize=18)
+    ax.set_zlabel('z / kpc', fontsize=18)
+    ax.legend()
     plt.show()
 
 def plot3D_from_pandas(data, data_cut, objects, target_transformed = None, norms=None, save_file = None):
@@ -277,7 +353,7 @@ def plot2D_projection_orthogonal(x, z, target, radius, xyz_kde, save_name=None) 
     plt.show()
     '''
 
-def plot2D_projection_equatorial_nonrot(ra, dec, target, radius, radec_kde, save_name=None) -> None:
+def plot2D_projection_equatorial_nonrot(ra, dec, target, radius, radec_kde=0, save_name=None) -> None:
     import seaborn as sns
     '''Func for plotting RA DEC projection with target object and 1 degree circle around it'''
 
@@ -296,55 +372,150 @@ def plot2D_projection_equatorial_nonrot(ra, dec, target, radius, radec_kde, save
     plt.text(target['RA']-0.15, target['DEC']+0.06, 'SGR 1900+14', fontsize=10, fontweight='bold', c = 'red')
     plt.xlabel("RA, degrees")
     plt.ylabel("Dec, degrees")
+    plt.legend()
     if save_name:
         plt.savefig(save_name, dpi=300, bbox_inches='tight')
-    plt.legend()
+    plt.close()
+    #plt.show()
+
+def plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, save_name=None) -> None:
+    I, X, Y, Z = data
+    norm, D_plane = calcPerpPlane(target_coords_galactocentric)
+    
+    #Plotting data, cut data and target in XY plane from above
+    plt.plot(X, Y, alpha=0.1)
+    plt.plot(data_cut['X'], data_cut['Y'], 'x')
+    plt.plot(target_coords_galactocentric[1], target_coords_galactocentric[2], 'ro')
+
+    #Add the perpendicular plane as a line
+    # We are plotting the line Ax + By + D = 0 (the plane's z=0 intercept)
+    A, B, C = norm
+    x_lim = plt.xlim()  # Get current plot limits
+    x_line = np.linspace(x_lim[0], x_lim[1], 10)
+
+    # Need to check for vertical line (B=0)
+    if abs(B) > 1e-6:
+        y_line = (-A * x_line - D_plane) / B
+        plt.plot(x_line, y_line, 'g--', linewidth=2, label='Target Plane (at z=0)')
+    else:
+        # Line is vertical: x = -D/A
+        x_vert = -D_plane / A
+        y_lim = plt.ylim()
+        plt.plot([x_vert, x_vert], y_lim, 'g--', linewidth=2, label='Target Plane (at z=0)')
+
+    # Define Earth's XY coordinates
+    earth_x = -8.122
+    earth_y = 0
+
+    # Plot Earth's position
+    plt.plot(earth_x, earth_y, 'co', markersize=10, label='Earth (XY Proj.)')
+
+    # Draw the arrow. The vector components (A, B) are exactly
+    # (target_x - earth_x) and (target_y - earth_y).
+    # We can get the plot width to set a reasonable head_width
+    plot_width = x_lim[1] - x_lim[0]
+    plt.arrow(earth_x, earth_y, 
+            A, B,  # A is dx, B is dy
+            color='m', 
+            head_width=plot_width / 40, 
+            length_includes_head=True,
+            label='Line of Sight (Norm)')
+    '''
+    #Final perp check
+    A = norm[0]
+    B = norm[1]
+
+    # Create the 2D norm vector
+    norm_2d = np.array([A, B])
+    # Create a vector parallel to the 2D plane line
+    plane_vec = np.array([B, -A])
+    # Calculate the dot product
+    dot_product = np.dot(norm_2d, plane_vec)
+
+    print(f"--- Perpendicularity Check ---")
+    print(f"2D Norm Vector: {norm_2d}")
+    print(f"2D Plane Vector: {plane_vec}")
+    print(f"Dot Product: {dot_product}")
+
+    if np.isclose(dot_product, 0):
+        print("Result: PASSED. The vectors are perpendicular.")
+    else:
+        print(f"Result: FAILED. Dot product is not zero: {dot_product}")
+    print("--------------------------------")
+    '''
+    if save_name: plt.savefig(save_name, dpi=300, bbox_inches='tight')
     plt.show()
-
+    
 if __name__ == '__main__':
-    particle = 'C'
-    event_num = 30
-    object_name = 'sgr'
-    data = np.genfromtxt(f'trajectories_data/{particle}/traj_PA+TA_{particle}_{event_num}_event_1000sims.txt', unpack=True, skip_footer=1)
-    objects_list, d_list, object_cords_eqatorial = get_objects_list()
+    #Sim params
+    mag_field = 'JF12'
+    particles = ['H', 'He', 'C', 'N', 'O']
+    event_nums = [22, 23, 30]
+    sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
+    sim_num = 10000
 
-    obj_cords = objects_list[object_name]
+    #Targets
+    objects_coords_galactocentric, distances, object_coords_equatorial = get_objects_params()
+    targets_names = list(objects_coords_galactocentric.keys())[3:] # All available objects
+
     '''
     2D SURFACE APPROACH
     '''
-    #data_cut, obj_cords_transformed, norms = makeCut(data, obj_cords, rot=True)
-    data_cut = makeCut(data, obj_cords, rot=False)
-    plot3D(data, objects_list)
-    #plot3D(data, objects_list)
-    #plot3D_from_pandas(data, data_cut_unrot, objects_list)
-    #plot3D_from_pandas(data, data_cut, objects_list, target_transformed=obj_cords_transformed, norms=norms)#, save_file=f'paper_results/trajectories/event_{event_num}_{object_name}_{particle}_3Dmap.jpeg')
-    
-    xyz_colormesh_kde, score = 0,0#calculate_kde(data_cut, obj_cords_transformed)
-    #count, hit = calculate_hit(data_cut, obj_cords_transformed, np.pi*d_list[object_name]/180)
-    count, hit = calculate_hit(data_cut, obj_cords, np.pi*d_list[object_name]/180)
+    #Scanning all combinations
+    for target in tqdm(targets_names):
+        target_results_list = []
+        output_dir = f'paper_results/projections_and_statistics/{target}/'
+        output_csv = f'{output_dir}hit_statistics.csv'
 
-    #mah_dist = calculate_mahalanobis(data_cut, obj_cords_transformed)
-    print(f"\n Num of trajectories: {count}, Hit is :{hit}, KDE score is : {score}")
-    #plot2D_projection_orthogonal(data_cut['X'], data_cut['Z'], obj_cords_transformed, np.pi*d_list[object_name]/180, xyz_colormesh_kde,)
-                      #f'harvard_conference_plots/30_C_SGR_scatter.jpeg')
-    
-    #TRANSFORM GALACTOCENTRIC TO EQUATORIAL
-    galactocentric_coords = SkyCoord(
-        x=data_cut['X'] * u.kpc,
-        y=data_cut['Y'] * u.kpc,
-        z=data_cut['Z'] * u.kpc,
-        representation_type = 'cartesian',
-        frame = 'galactocentric'
-    )
+        for particle in tqdm(particles):
+            for event_num in tqdm(event_nums):
+                for sim_type in sim_types:
+                    target_coords_galactocentric = objects_coords_galactocentric[target]
+                    data = np.genfromtxt(f'trajectories_data/{mag_field}/{particle}/{sim_type}/traj_PA+TA_{particle}_{event_num}_event_{sim_num}sims.txt', 
+                                        unpack=True, skip_footer=1)
+                    data_cut = makeCut(data, target_coords_galactocentric, rot=False)
 
-    #Transform the coordinates to the Galactic frame
-    galactic_coords = galactocentric_coords.transform_to('galactic')
+                    #plot3D_zoomed(data, data_cut, target_coords_galactocentric, zoom_kpc=2.0)
+                    #plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, )
+                                                #save_name='paper_results/various_tests/perp_plane_view_from_above_old_approach.jpeg')
 
-    #Transform the Galactic coordinates to the Equatorial frame (ICRS)
-    equatorial_coords = galactic_coords.transform_to('icrs')
+                    count, hit = calculate_hit(data_cut, target_coords_galactocentric, np.pi*distances[target]/180) #small angle approx is good enough here
 
-    # Extract Right Ascension and Declination in degrees
-    ra = equatorial_coords.ra.deg
-    dec = equatorial_coords.dec.deg
+                    #print(f"\n Num of trajectories: {count}, Hit is :{hit}")
+                    target_results_list.append({
+                        'particle': particle,
+                        'event_num': event_num,
+                        'sim_type': sim_type,
+                        'mag_field': mag_field,
+                        'hit_count': count,
+                        'hit_fraction': hit,
+                        'intersections_found': len(data_cut) # Also a useful stat
+                    })
+                    '''
+                    #TRANSFORM GALACTOCENTRIC TO EQUATORIAL
+                    galactocentric_coords = SkyCoord(
+                        x=data_cut['X'] * u.kpc,
+                        y=data_cut['Y'] * u.kpc,
+                        z=data_cut['Z'] * u.kpc,
+                        representation_type = 'cartesian',
+                        frame = 'galactocentric'
+                    )
 
-    plot2D_projection_equatorial_nonrot(ra, dec, object_cords_eqatorial["sgr"], np.pi*d_list[object_name]/180, xyz_colormesh_kde,)
+                    #Transform the coordinates to the Galactic frame
+                    galactic_coords = galactocentric_coords.transform_to('galactic')
+
+                    #Transform the Galactic coordinates to the Equatorial frame (ICRS)
+                    equatorial_coords = galactic_coords.transform_to('icrs')
+
+                    # Extract Right Ascension and Declination in degrees
+                    ra = equatorial_coords.ra.deg
+                    dec = equatorial_coords.dec.deg
+
+                    plot2D_projection_equatorial_nonrot(ra, dec, object_coords_equatorial[target],
+                                                        1.0, save_name=f'paper_results/projections_and_statistics/{target}/RA_DEC_projection_{mag_field}_{particle}_{sim_type}_event{event_num}.jpeg')
+                    '''
+        
+        #Save results to CSV
+        results_df = pd.DataFrame(target_results_list)
+        results_df.to_csv(output_csv, index=False)
+        print(f"\n--- Successfully saved results for {target} to {output_csv} ---")

@@ -8,17 +8,25 @@ import glob
 import time
 from typing import Tuple
 
-def calcPerpPlane(target_cords, earth_cords = [0, -8.2, 0, 0.0208]):
-    '''Calculates the A, B, C, D for the plane'''
-    norm = np.array([target_cords[1] - earth_cords[1], target_cords[2] - earth_cords[2], target_cords[3] - earth_cords[3]])
+def calcPerpPlane(target_cords, earth_cords = [0, -8.122, 0, 0.0208]):
+    '''Calculates the A, B, C, D for the plane equation Ax + By + Cz + D = 0
+    which is perpendicular to the line connecting Earth and target object'''
+    # norm = [A, B, C]
+    norm = np.array([target_cords[1] - earth_cords[1], 
+                     target_cords[2] - earth_cords[2], 
+                     target_cords[3] - earth_cords[3]])
+    
+    # D = - (A*x0 + B*y0 + C*z0), where (x0, y0, z0) is the target coords
     D_plane = -(norm[0]*target_cords[1] + norm[1]*target_cords[2] + norm[2]*target_cords[3])
-    #xx, yy = np.meshgrid(np.linspace(-20,20,160), np.linspace(-20,20,160))
-    #z = (-norm[0] * xx - norm[1] * yy + D_plane)/norm[2]
 
     return norm, D_plane
 
-def calcEdge(x, y, z, norm, D_plane):
-    ''' Finds the Last point which crosses observational surface'''
+def calcEdgeOld(x, y, z, norm, D_plane):
+    ''' 
+    Finds the precise intersection point of a trajectory with the plane.
+    Uses linear interpolation.
+    Returns (x, y, z) of the intersection or (None, None, None) if no intersection.
+    '''
     old_distance = 1e5
     for idx in range(len(x)):
         new_distance = abs(norm[0]*x[idx] + norm[1]*y[idx] + norm[2]*z[idx] + D_plane)/np.sqrt(norm[0]**2 + norm[1]**2 + norm[2]**2)
@@ -29,6 +37,46 @@ def calcEdge(x, y, z, norm, D_plane):
             return x, y, z
         else:
             old_distance = new_distance
+
+def calcEdge(x, y, z, norm, D_plane):
+    ''' 
+    Finds the precise intersection point of a trajectory with the plane.
+    Uses linear interpolation.
+    Returns (x, y, z) of the intersection or (None, None, None) if no intersection.
+    '''
+    # Calculating the signed distance for ALL points in the trajectory
+    # This is f(P) = Ax + By + Cz + D
+    signed_dist = norm[0]*x + norm[1]*y + norm[2]*z + D_plane
+    
+    # Finding all points where the sign changes from negative (Earth side) to positive
+    # np.where returns a tuple, we take the first element [0]
+    crossings = np.where((signed_dist[:-1] < 0) & (signed_dist[1:] >= 0))[0]
+    
+    # Check if any intersection was found
+    if len(crossings) == 0:
+        # Trajectory never crossed the plane
+        return None, None, None
+      
+    # Getting the index of the *first* crossing
+    # (A back-traced particle should only cross once)
+    idx = crossings[0]
+    
+    # Getting the two points that bracket the intersection
+    p0 = np.array([x[idx], y[idx], z[idx]])
+    p1 = np.array([x[idx+1], y[idx+1], z[idx+1]])
+    
+    # Getting the signed distances for those two points
+    d0 = signed_dist[idx]
+    d1 = signed_dist[idx+1]
+    
+    # 7. Interpolating
+    # We want the point P such that f(P) = 0.
+    # The interpolation factor 't' (from 0 to 1) is -d0 / (d1 - d0)
+    # P_intersect = p0 + t * (p1 - p0)
+    t = -d0 / (d1 - d0) #Assuming distance changes linearly between p0 and p1
+    intersect_point = p0 + t * (p1 - p0)
+    
+    return intersect_point[0], intersect_point[1], intersect_point[2]
 
 def p_mat(angle):
     '''Rotate over X'''
@@ -70,17 +118,18 @@ def rotate_yz(x, y, z, norm):
 
     return data_after_rot[:1].ravel(), data_after_rot[1:2].ravel(), data_after_rot[2:].ravel()
 
-def makeCut(data, target_cords, rot=True):
+def makeCutOld(data, target_cords, rot=False):
     '''Returns the point of intersection of the trajectory with the object surface.
-    Makes ortogonal transformation to match yOz plane. Need to be merged with calcEdge?
+    Makes ortogonal transformation to match yOz plane if rot is True. Need to be merged with calcEdge?
     Now returns also a transformed object cords as [y, z]'''
     
     print("---STARTING TO MAKE A CUT---")
     start_time = time.time()
     I,X,Y,Z = data
     x_nonrot, y_nonrot, z_nonrot = [], [], []
+    norm, D_plane = calcPerpPlane(target_cords)
+
     for i in tqdm(np.unique(I)):
-        norm, D_plane = calcPerpPlane(target_cords)
         try:
             _x, _y, _z = calcEdge(X[I == i], Y[I == i], Z[I == i], norm, D_plane)
         except:
@@ -116,6 +165,48 @@ def makeCut(data, target_cords, rot=True):
         return pd.DataFrame({'X':np.array(x_rot), 'Y':np.array(y_rot), 'Z':np.array(z_rot)}), obj_cords_transformed, norms
     else:
         return pd.DataFrame({'X':np.array(x_nonrot), 'Y':np.array(y_nonrot), 'Z':np.array(z_nonrot)})
+
+def makeCut(data, target_cords, rot=False):
+    '''Returns the point of intersection of the trajectory with the object surface.'''
+    
+    start_time = time.time()
+    I, X, Y, Z = data
+    
+    # Arrays to store the (x,y,z) coordinates of the intersection points
+    x_intersect, y_intersect, z_intersect = [], [], []
+    
+    # Calculate the perp plane
+    norm, D_plane = calcPerpPlane(target_cords)
+    
+    trajectories_analyzed = 0
+    trajectories_intersected = 0
+    
+    unique_I = np.unique(I)
+    
+    for i in unique_I:
+        trajectories_analyzed += 1
+        
+        #Calculating intersection
+        _x, _y, _z = calcEdge(X[I == i], Y[I == i], Z[I == i], norm, D_plane)
+
+        # Check if an intersection was found
+        if _x is not None:
+            trajectories_intersected += 1
+            x_intersect.append(_x)
+            y_intersect.append(_y)
+            z_intersect.append(_z)
+
+    # Store the non-rotated intersection points
+    intersection_points = pd.DataFrame({
+        'X': np.array(x_intersect), 
+        'Y': np.array(y_intersect), 
+        'Z': np.array(z_intersect)
+    })
+
+    if rot:
+        print("---ROTATION NOT IMPLEMENTED IN THIS CORRECTION---") 
+    else:
+        return intersection_points
 
 def calculate_kde(data, object_cords) -> Tuple[Tuple[np.array, np.array, np.array], float]:
     '''Calculates pdf using kde with bandwith from the gridsearch
@@ -153,15 +244,21 @@ def calculate_kde(data, object_cords) -> Tuple[Tuple[np.array, np.array, np.arra
 
 def calculate_hit(data, circle_center, r) -> float:
     '''
-    This function calculates the number of events hitting the area of r degree around
-    the potential source divided by the number of all simulated events.
-    Equasion as simple as : (x - cc_x)^2 + (y - cc_y)^2 = r^2
-    Returns simple float32 value.
+    This function calculates the number of events hitting the area (3D) within 
+    a physical radius 'r' around the potential source.
+    
+    The radius 'r' should be the physical distance in kpc.
+    
+    Returns:
+        inside_circle_count (int): Total number of hits.
+        hit_fraction (float): inside_circle_count / total_intersections.
     '''
 
-    print("---CALCULATING HIT---")
     # Calculate squared distances from the circle center
-    data['distance_squared'] = (data['X'] - circle_center[0]) ** 2 + (data['Z'] - circle_center[2]) ** 2
+    target_x = circle_center[1]
+    target_y = circle_center[2]
+    target_z = circle_center[3]
+    data['distance_squared'] = (data['X'] - target_x)**2 + (data['Y'] - target_y)**2 + (data['Z'] - target_z)**2
 
     # Determine how many points are inside the circle
     inside_circle_count = data[data['distance_squared'] <= r**2].shape[0]
