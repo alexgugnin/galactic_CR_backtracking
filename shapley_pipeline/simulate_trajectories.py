@@ -88,7 +88,7 @@ def setupOuterSimulation():
     return sim
 
 
-def innerGalacticSimulator(events, sigma_energy, sigma_dir, particle):
+def innerGalacticSimulator(events, sigma_energy, sigma_dir, particle, seed, R):
     '''This function performs backtracking of charged particles to the edge of the Galaxy.
     Returns pd.DataFrame with coordinates, energies etc'''
 
@@ -723,10 +723,11 @@ if __name__ == '__main__':
     sigma_energy = 0.07
     sigma_dir = 0.002 #1 degree directional uncertainty
     shapley_coords = pd.read_csv("shapley_with_radii.csv")
-    
+    print(shapley_coords)
+    exit()
     '''PERFORMING SIMULATIONS INSIDE THE GALAXY'''
     
-    #inner_results = innerGalacticSimulator(sigma_energy=sigma_energy, sigma_dir=sigma_dir, events=events, particle = particles['p'])
+    #inner_results = innerGalacticSimulator(sigma_energy=sigma_energy, sigma_dir=sigma_dir, events=events, particle = particles['p'], seed=seed)
     
     #innerGalacticVisualizer(inner_results)
     #print(inner_results.head())
@@ -751,7 +752,7 @@ if __name__ == '__main__':
     #visualize_3D_shapley('sim_results/test_trajectories_10_1model_p.txt')
     #innerGalacticVisualizer(inner_results, fname="paper_plots/inner_gal_base_Fe.jpeg")
     #plot_kde(inner_results, fname="paper_plots/highE_sim.jpeg")
-    vis_double_kde("paper_plots/highE_obs.jpeg", "paper_plots/highE_sim.jpeg", "paper_plots/highE_combined.jpeg")
+    #vis_double_kde("paper_plots/highE_obs.jpeg", "paper_plots/highE_sim.jpeg", "paper_plots/highE_combined.jpeg")
     #outerGalacticVisualizer('sim_results/outer_directions_1model_p.txt', 'sim_results/outer_detections_1model_p.txt', inner_results, 
     #                        fname="paper_plots/outer_gal_Lc1Mpc_B01nG_p.jpeg")
     

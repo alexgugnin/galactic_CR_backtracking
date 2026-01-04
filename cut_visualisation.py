@@ -11,19 +11,21 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 
 import glob
-
+import os
 
 def get_objects_params():
     distances = {
         "sgr": 12.5, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
         "grs": 8.6, #+2-1.6  https://arxiv.org/pdf/1409.2453
         "ss": 5.5, #+-0.2   https://www.aanda.org/articles/aa/full_html/2018/09/aa32488-17/aa32488-17.html
-        "ngc": 7.58#       https://doi.org/10.1093/mnras/stab1475
+        "ngc": 7.58,#       https://doi.org/10.1093/mnras/stab1475
+        "shapley": 12.5# Placeholder for Shapley supercluster to check turbulent mag field effects
     }
     object_coords_eq = {"sgr": {"RA": 286.8097083, "DEC": 9.3222500, "dist": distances["sgr"]}, #https://arxiv.org/pdf/2412.20050
                      "grs": {"RA": 288.798, "DEC": 10.946, "dist": distances["grs"]},  #https://swift.gsfc.nasa.gov/results/transients/GRS1915p105/ 
                      "ss": {"RA": 287.956, "DEC": 4.99, "dist": distances["ss"]},      #https://swift.gsfc.nasa.gov/results/transients/SS433/
                      "ngc": {"RA": 287.800, "DEC": 1.030, "dist": distances["ngc"]}, #https://doi.org/10.1093/mnras/stab1475
+                     "shapley": {"RA": 192.8015, "DEC": -22.537, "dist": distances["shapley"]}
                      }
     
     '''
@@ -42,20 +44,83 @@ def get_objects_params():
                       distance=object_coords_eq["ss"]["dist"]*u.kpc, frame='icrs')
     coords_ngc = SkyCoord(ra=object_coords_eq["ngc"]["RA"]*u.deg, dec=object_coords_eq["ngc"]["DEC"]*u.deg,
                       distance=object_coords_eq["ngc"]["dist"]*u.kpc, frame='icrs')
+    coords_shapley = SkyCoord(ra=object_coords_eq["shapley"]["RA"]*u.deg, dec=object_coords_eq["shapley"]["DEC"]*u.deg,
+                      distance=object_coords_eq["shapley"]["dist"]*u.kpc, frame='icrs')
     
     g_sgr = coords_sgr.transform_to('galactocentric') 
     g_grs = coords_grs.transform_to('galactocentric') 
     g_ss = coords_ss.transform_to('galactocentric') 
     g_ngc = coords_ngc.transform_to('galactocentric') 
+    g_shapley = coords_shapley.transform_to('galactocentric')
 
     objects_coords_galactocentric = {
         "sgr": [0, g_sgr.x.value, g_sgr.y.value, g_sgr.z.value],
         "grs": [0, g_grs.x.value, g_grs.y.value, g_grs.z.value],
         "ss": [0, g_ss.x.value, g_ss.y.value, g_ss.z.value],
-        "ngc": [0, g_ngc.x.value, g_ngc.y.value, g_ngc.z.value]
+        "ngc": [0, g_ngc.x.value, g_ngc.y.value, g_ngc.z.value],
+        "shapley": [0, g_shapley.x.value, g_shapley.y.value, g_shapley.z.value]
     }
 
     return objects_coords_galactocentric, distances, object_coords_eq
+
+def transform_pandas_galactocentric_to_equatorial(data_cut):
+    '''Transforms a pandas DataFrame with galactocentric coordinates to equatorial coordinates.
+    Args:
+        data_cut (pd.DataFrame): DataFrame with 'X', 'Y', 'Z' columns in galactocentric coordinates.
+    Returns:
+        ra (np.ndarray): Right Ascension in degrees.
+        dec (np.ndarray): Declination in degrees.
+    '''
+
+    #TRANSFORM GALACTOCENTRIC TO EQUATORIAL
+    galactocentric_coords = SkyCoord(
+        x=data_cut['X'] * u.kpc,
+        y=data_cut['Y'] * u.kpc,
+        z=data_cut['Z'] * u.kpc,
+        representation_type = 'cartesian',
+        frame = 'galactocentric'
+    )
+
+    #Transform the coordinates to the Galactic frame
+    galactic_coords = galactocentric_coords.transform_to('galactic')
+
+    #Transform the Galactic coordinates to the Equatorial frame (ICRS)
+    equatorial_coords = galactic_coords.transform_to('icrs')
+
+    # Extract Right Ascension and Declination in degrees
+    ra = equatorial_coords.ra.deg
+    dec = equatorial_coords.dec.deg
+
+    return ra, dec
+
+def transform_pandas_galactocentric_to_galactic(data_cut):
+    '''Transforms a pandas DataFrame with galactocentric coordinates already wrapped for simulation to galactic coordinates.
+    Args:
+        data_cut (pd.DataFrame): DataFrame with 'X', 'Y', 'Z' columns in galactocentric coordinates.
+    Returns:
+        l (np.ndarray): Galactic longitude in degrees.
+        b (np.ndarray): Galactic latitude in degrees.
+    '''
+    
+    #TRANSFORM GALACTOCENTRIC TO GALACTIC
+    galactocentric_coords = SkyCoord(
+        x=data_cut['X'] * u.kpc,
+        y=data_cut['Y'] * u.kpc,
+        z=data_cut['Z'] * u.kpc,
+        representation_type = 'cartesian',
+        frame = 'galactocentric'
+    )
+
+    # Extract galactic lon and galactic lat in degrees
+    #IF WE TRANSFORM FROM GALACTOCENTRIC TO GALACTIC, NO DONT NEED TO TRANSFORM FROM COLATITUDE!!!!!!!!!
+    lon = galactocentric_coords.galactic.l
+    lon.wrap_angle = 180 * u.deg
+    lon = lon.radian
+    lat = galactocentric_coords.galactic.b.radian
+    #colat = galactocentric_coords.galactic.b.radian
+    #lat = np.pi/2 - colat #Transform from colatitiude
+    
+    return lon, lat
 
 def plot3D(data, objects) -> None:
     fig = plt.figure(figsize=(12,12))
@@ -456,7 +521,7 @@ if __name__ == '__main__':
 
     #Targets
     objects_coords_galactocentric, distances, object_coords_equatorial = get_objects_params()
-    targets_names = list(objects_coords_galactocentric.keys())[3:] # All available objects
+    targets_names = list(objects_coords_galactocentric.keys())[:1] # All available objects
 
     '''
     2D SURFACE APPROACH
@@ -465,16 +530,35 @@ if __name__ == '__main__':
     for target in tqdm(targets_names):
         target_results_list = []
         output_dir = f'paper_results/projections_and_statistics/{target}/'
-        output_csv = f'{output_dir}hit_statistics.csv'
+        output_csv = f'{output_dir}hit_statistics_close.csv'
 
-        for particle in tqdm(particles):
-            for event_num in tqdm(event_nums):
+        #Check existing calculations to avoid overwriting
+        processed_combinations = set()
+        if os.path.exists(output_csv):
+            try:
+                existing_df = pd.read_csv(output_csv)
+                # Create a set of tuples (particle, event_num, sim_type) that are already done
+                # We convert event_num to int to ensure matching works correctly
+                for _, row in existing_df.iterrows():
+                    processed_combinations.add((row['particle'], int(row['event_num']), row['sim_type']))
+                print(f"Found {len(existing_df)} existing records for {target}. Skipping them.")
+            except pd.errors.EmptyDataError:
+                pass # File exists but is empty
+
+        for particle in tqdm(particles, desc="Particles", leave=False):
+            for event_num in tqdm(event_nums, desc="Event Numbers", leave=False):
                 for sim_type in sim_types:
+
+                    #Skip already processed combinations
+                    if (particle, event_num, sim_type) in processed_combinations:
+                        continue
+
                     target_coords_galactocentric = objects_coords_galactocentric[target]
                     data = np.genfromtxt(f'trajectories_data/{mag_field}/{particle}/{sim_type}/traj_PA+TA_{particle}_{event_num}_event_{sim_num}sims.txt', 
                                         unpack=True, skip_footer=1)
                     data_cut = makeCut(data, target_coords_galactocentric, rot=False)
 
+                    #Debugging plots
                     #plot3D_zoomed(data, data_cut, target_coords_galactocentric, zoom_kpc=2.0)
                     #plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, )
                                                 #save_name='paper_results/various_tests/perp_plane_view_from_above_old_approach.jpeg')
@@ -482,7 +566,7 @@ if __name__ == '__main__':
                     count, hit = calculate_hit(data_cut, target_coords_galactocentric, np.pi*distances[target]/180) #small angle approx is good enough here
 
                     #print(f"\n Num of trajectories: {count}, Hit is :{hit}")
-                    target_results_list.append({
+                    target_results = {
                         'particle': particle,
                         'event_num': event_num,
                         'sim_type': sim_type,
@@ -490,32 +574,20 @@ if __name__ == '__main__':
                         'hit_count': count,
                         'hit_fraction': hit,
                         'intersections_found': len(data_cut) # Also a useful stat
-                    })
+                    }
+
+                    #Save immediately after each calculation to avoid data loss
+                    df_row = pd.DataFrame([target_results])
+                    header_needed = not os.path.exists(output_csv)
+                    df_row.to_csv(output_csv, mode='a', header=header_needed, index=False)
                     '''
-                    #TRANSFORM GALACTOCENTRIC TO EQUATORIAL
-                    galactocentric_coords = SkyCoord(
-                        x=data_cut['X'] * u.kpc,
-                        y=data_cut['Y'] * u.kpc,
-                        z=data_cut['Z'] * u.kpc,
-                        representation_type = 'cartesian',
-                        frame = 'galactocentric'
-                    )
-
-                    #Transform the coordinates to the Galactic frame
-                    galactic_coords = galactocentric_coords.transform_to('galactic')
-
-                    #Transform the Galactic coordinates to the Equatorial frame (ICRS)
-                    equatorial_coords = galactic_coords.transform_to('icrs')
-
-                    # Extract Right Ascension and Declination in degrees
-                    ra = equatorial_coords.ra.deg
-                    dec = equatorial_coords.dec.deg
-
+                    #Transform to equatorial for 2D plotting
+                    ra, dec = transform_pandas_galactocentric_to_equatorial(data_cut)
                     plot2D_projection_equatorial_nonrot(ra, dec, object_coords_equatorial[target],
                                                         1.0, save_name=f'paper_results/projections_and_statistics/{target}/RA_DEC_projection_{mag_field}_{particle}_{sim_type}_event{event_num}.jpeg')
                     '''
         
         #Save results to CSV
-        results_df = pd.DataFrame(target_results_list)
-        results_df.to_csv(output_csv, index=False)
-        print(f"\n--- Successfully saved results for {target} to {output_csv} ---")
+        #results_df = pd.DataFrame(target_results_list)
+        #results_df.to_csv(output_csv, index=False)
+        #print(f"\n--- Successfully saved results for {target} to {output_csv} ---")
