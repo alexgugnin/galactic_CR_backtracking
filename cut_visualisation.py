@@ -15,7 +15,7 @@ import os
 
 def get_objects_params():
     distances = {
-        "sgr": 12.5, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
+        "sgr": 2.9, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
         "grs": 8.6, #+2-1.6  https://arxiv.org/pdf/1409.2453
         "ss": 5.5, #+-0.2   https://www.aanda.org/articles/aa/full_html/2018/09/aa32488-17/aa32488-17.html
         "ngc": 7.58,#       https://doi.org/10.1093/mnras/stab1475
@@ -514,23 +514,25 @@ def plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, 
 if __name__ == '__main__':
     #Sim params
     mag_field = 'JF12'
-    particles = ['H', 'He', 'C', 'N', 'O']
+    particles = ['H', 'He', 'C', 'N', 'O', 'Fe']
     event_nums = [22, 23, 30]
     sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
-    sim_num = 10000
+    sim_num = 1000
+    seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
 
     #Targets
     objects_coords_galactocentric, distances, object_coords_equatorial = get_objects_params()
-    targets_names = list(objects_coords_galactocentric.keys())[:1] # All available objects
+    targets_names = list(objects_coords_galactocentric.keys()) # All available objects
+    targets_names = ['sgr']
 
     '''
     2D SURFACE APPROACH
     '''
     #Scanning all combinations
-    for target in tqdm(targets_names):
+    for target in tqdm(targets_names, desc="Targets", leave=False):
         target_results_list = []
         output_dir = f'paper_results/projections_and_statistics/{target}/'
-        output_csv = f'{output_dir}hit_statistics_close.csv'
+        output_csv = f'{output_dir}hit_statistics_1000_close.csv'
 
         #Check existing calculations to avoid overwriting
         processed_combinations = set()
@@ -544,48 +546,57 @@ if __name__ == '__main__':
                 print(f"Found {len(existing_df)} existing records for {target}. Skipping them.")
             except pd.errors.EmptyDataError:
                 pass # File exists but is empty
+        
+        for seed in tqdm(seeds, desc="Seeds", leave=False):
+            for particle in tqdm(particles, desc="Particles", leave=False):
+                for event_num in tqdm(event_nums, desc="Event Numbers", leave=False):
+                    for sim_type in sim_types:
 
-        for particle in tqdm(particles, desc="Particles", leave=False):
-            for event_num in tqdm(event_nums, desc="Event Numbers", leave=False):
-                for sim_type in sim_types:
+                        #Skip already processed combinations
+                        if (particle, event_num, sim_type) in processed_combinations:
+                            continue
 
-                    #Skip already processed combinations
-                    if (particle, event_num, sim_type) in processed_combinations:
-                        continue
+                        target_coords_galactocentric = objects_coords_galactocentric[target]
+                        data = np.genfromtxt(f'trajectories_data/{mag_field}/{particle}/{sim_type}/traj_PA+TA_{particle}_{event_num}_event_{sim_num}sims_seed{seed}.txt', 
+                                            unpack=True, skip_footer=1)
+                        data_cut = makeCut(data, target_coords_galactocentric, rot=False)
 
-                    target_coords_galactocentric = objects_coords_galactocentric[target]
-                    data = np.genfromtxt(f'trajectories_data/{mag_field}/{particle}/{sim_type}/traj_PA+TA_{particle}_{event_num}_event_{sim_num}sims.txt', 
-                                        unpack=True, skip_footer=1)
-                    data_cut = makeCut(data, target_coords_galactocentric, rot=False)
+                        #Debugging plots
+                        #plot3D_zoomed(data, data_cut, target_coords_galactocentric, zoom_kpc=2.0)
+                        #plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, )
+                                                    #save_name='paper_results/various_tests/perp_plane_view_from_above_old_approach.jpeg')
 
-                    #Debugging plots
-                    #plot3D_zoomed(data, data_cut, target_coords_galactocentric, zoom_kpc=2.0)
-                    #plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, )
-                                                #save_name='paper_results/various_tests/perp_plane_view_from_above_old_approach.jpeg')
+                        #Angles and hit calculation
+                        count1, hit1 = calculate_hit(data_cut, target_coords_galactocentric, np.pi*1*distances[target]/180) #small angle approx is good enough here
+                        count2, hit2 = calculate_hit(data_cut, target_coords_galactocentric, np.pi*2*distances[target]/180)
+                        count3, hit3 = calculate_hit(data_cut, target_coords_galactocentric, np.pi*3*distances[target]/180)
 
-                    count, hit = calculate_hit(data_cut, target_coords_galactocentric, np.pi*distances[target]/180) #small angle approx is good enough here
+                        #print(f"\n Num of trajectories: {count}, Hit is :{hit}")
+                        target_results = {
+                            'particle': particle,
+                            'event_num': event_num,
+                            'sim_type': sim_type,
+                            'mag_field': mag_field,
+                            'seed': seed,
+                            'hit_count_1degree': count1,
+                            'hit_count_2degree': count2,
+                            'hit_count_3degree': count3,
+                            'hit_fraction_1degree': hit1,
+                            'hit_fraction_2degree': hit2,
+                            'hit_fraction_3degree': hit3,
+                            'intersections_found': len(data_cut) # Also a useful stat
+                        }
 
-                    #print(f"\n Num of trajectories: {count}, Hit is :{hit}")
-                    target_results = {
-                        'particle': particle,
-                        'event_num': event_num,
-                        'sim_type': sim_type,
-                        'mag_field': mag_field,
-                        'hit_count': count,
-                        'hit_fraction': hit,
-                        'intersections_found': len(data_cut) # Also a useful stat
-                    }
-
-                    #Save immediately after each calculation to avoid data loss
-                    df_row = pd.DataFrame([target_results])
-                    header_needed = not os.path.exists(output_csv)
-                    df_row.to_csv(output_csv, mode='a', header=header_needed, index=False)
-                    '''
-                    #Transform to equatorial for 2D plotting
-                    ra, dec = transform_pandas_galactocentric_to_equatorial(data_cut)
-                    plot2D_projection_equatorial_nonrot(ra, dec, object_coords_equatorial[target],
-                                                        1.0, save_name=f'paper_results/projections_and_statistics/{target}/RA_DEC_projection_{mag_field}_{particle}_{sim_type}_event{event_num}.jpeg')
-                    '''
+                        #Save immediately after each calculation to avoid data loss
+                        df_row = pd.DataFrame([target_results])
+                        header_needed = not os.path.exists(output_csv)
+                        df_row.to_csv(output_csv, mode='a', header=header_needed, index=False)
+                        '''
+                        #Transform to equatorial for 2D plotting
+                        ra, dec = transform_pandas_galactocentric_to_equatorial(data_cut)
+                        plot2D_projection_equatorial_nonrot(ra, dec, object_coords_equatorial[target],
+                                                            1.0, save_name=f'paper_results/projections_and_statistics/{target}/RA_DEC_projection_{mag_field}_{particle}_{sim_type}_event{event_num}.jpeg')
+                        '''
         
         #Save results to CSV
         #results_df = pd.DataFrame(target_results_list)

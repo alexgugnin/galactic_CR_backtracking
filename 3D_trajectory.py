@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     '''
     SHAPLEY events for testing turbulent magnetic field
-    '''
+    
     events = []
     with open('shapley_pipeline/Auger_lowE_shapley.dat', 'r') as infile:
         for line in infile:
@@ -69,31 +69,33 @@ if __name__ == '__main__':
             temp_event = line.split()
             events.append((temp_event[0], float(temp_event[5]), float(temp_event[6]), float(temp_event[7])))
     '''
+    '''
     Sim for 4 particles for 1 event(third one)
     '''
-    #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), - nucleusId(52,26)]
-    particles = [- nucleusId(12,6)]
-    particle_alias = 'C'
+    #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), 
+    #           - nucleusId(14,7), - nucleusId(16,8), - nucleusId(52,26)]
+    particles = [- nucleusId(16,8)]
+    particle_alias = 'O'
     mag_model_alias = 'JF12'
     events_in_void = [16, 18, 19, 20, 22, 23, 24, 25, 30]
-    #triplet = [30]#[22, 23, 30]
-    triplet = [0]
+    #triplet = [0]#[22, 23, 30]
+    triplet = [22, 23, 30]
     sigma_energy = (0.07, 0.15)
     sigma_dir = (0.002, 0.003) #1, 1.5 degree directional uncertainty
 
     seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
-    for seed in seeds:
+    for seed in tqdm(seeds):
         R = Random(seed)
         B = JF12Field()
-        #B.randomStriated(seed)
+        B.randomStriated(seed)
         B.randomTurbulent(seed)
-        for event_idx in tqdm(triplet):
+        for event_idx in triplet:
             # simulation setup
             sim = ModuleList()
             sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
             sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
             NUM_OF_SIMS = 1000
-            output = MyTrajectoryOutput(f'trajectories_data/{mag_model_alias}/{particle_alias}/turbulent/traj_PA+TA_{particle_alias}_{event_idx}_event_{NUM_OF_SIMS}sims_seed{seed}.txt')
+            output = MyTrajectoryOutput(f'trajectories_data/{mag_model_alias}/{particle_alias}/striated+turbulent/traj_PA+TA_{particle_alias}_{event_idx}_event_{NUM_OF_SIMS}sims_seed{seed}.txt')
             sim.add(output)
 
             event = events[event_idx]
@@ -114,7 +116,7 @@ if __name__ == '__main__':
             mean_dir.setRThetaPhi(1, lat0, lon0)
 
             for pid in particles:
-                for i in tqdm(range(NUM_OF_SIMS)):
+                for i in range(NUM_OF_SIMS):
                     if int(event[0]) < 28:
                         energy = R.randNorm(mean_energy, sigma_energy[1]*mean_energy)
                         direction = R.randVectorAroundMean(mean_dir, sigma_dir[1])

@@ -127,50 +127,52 @@ def plot_combined_figure(targets_names, simulations_directory, seeds,
                          crop = False, save_name = None):
     '''Plots a combined figure with 4 images each representing one of the types (candidate or particle type etc)'''
 
-    for seed in seeds:
-        if not crop: fig, axes = plt.subplots(2, 2, figsize=(16, 9), subplot_kw={'projection': 'hammer'})
-        if crop: fig, axes = plt.subplots(2, 2, figsize=(16, 9))
-        # Flatten the 2x2 array into a 1D array (length 4) for easy looping
-        axes_flat = axes.flatten()
-        #Iterating through all objects to find and plot candidates
-
+    for seed in tqdm(seeds):
         mag_field = 'JF12'
-        particle = 'C'
-        event_num = 30
+        particle = 'H'
+        event_nums = [23, 30]#[22, 23, 30]
         sim_num = 1000
 
         target_labels = {'sgr': 'SGR 1900+14', 'grs': 'GRS 1915+105', 'ngc': 'NGC 6760', 
                          'ss': 'SS 433', 'shapley': 'J125113.4-223227'}
         
-        for target_name in targets_names:
-            #hit_stats = pd.read_csv(os.path.join(targets_directory, f"{target_name}/hit_statistics.csv"))
-            #ADD HIT STATS EVALUATION IF ELSE
-            #Getting simulated data and performing cut
-            sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
-            save_name = os.path.join(save_directory, f"combined_cropped_maps_{particle}_{event_num}_event_{target_name}_seed{seed}.png")
+        for event_num in event_nums:
 
-            for i, sim_type in enumerate(tqdm(sim_types)):
-                sim_data = np.genfromtxt(f'{simulations_directory}/{mag_field}/{particle}/{sim_type}/traj_PA+TA_{particle}_{event_num}_event_{sim_num}sims_seed{seed}.txt', 
-                                                    unpack=True, skip_footer=1)
+            if not crop: fig, axes = plt.subplots(2, 2, figsize=(16, 9), subplot_kw={'projection': 'hammer'})
+            if crop: fig, axes = plt.subplots(2, 2, figsize=(16, 9))
+            # Flatten the 2x2 array into a 1D array (length 4) for easy looping
+            axes_flat = axes.flatten()
+            #Iterating through all objects to find and plot candidates
+            
+            for target_name in targets_names:
+                #hit_stats = pd.read_csv(os.path.join(targets_directory, f"{target_name}/hit_statistics.csv"))
+                #ADD HIT STATS EVALUATION IF ELSE
+                #Getting simulated data and performing cut
+                sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
+                save_name = os.path.join(save_directory, f"{mag_field}/{particle}/combined_cropped_maps_{particle}_{event_num}_event_{target_name}_seed{seed}.png")
 
-                #Galactocentric coords
-                data_cut = makeCut(sim_data, target_coords_galactocentric[target_name], rot=False)
-                # Transform galactocentric coordinates to equatorial coordinates
-                lon, lat = transform_pandas_galactocentric_to_galactic(data_cut)
-                data_cut_galactic = pd.DataFrame({'Lon': lon, 'Lat': lat})
-                
-                #Plotting
-                handles, labels = plot_hammer_galactic_with_candidate(ax = axes_flat[i], type_name = sim_type,
-                                                                      candidate_label = target_labels[target_name],
-                                                    candidate_coords_equatorial = target_coords_equatorial[target_name],
-                                                    data_cut_galactic = data_cut_galactic, crop = crop)
+                for i, sim_type in enumerate(sim_types):
+                    sim_data = np.genfromtxt(f'{simulations_directory}/{mag_field}/{particle}/{sim_type}/traj_PA+TA_{particle}_{event_num}_event_{sim_num}sims_seed{seed}.txt', 
+                                                        unpack=True, skip_footer=1)
 
-        plt.tight_layout()
-        plt.suptitle("Galactic Coordinates Trajectory Distribution for C nuclei PA event", fontsize=20, y=1.02)
-        fig.legend(handles=handles, labels=labels)
-        if save_name: plt.savefig(save_name, bbox_inches='tight', dpi=300)
-        plt.close()
-        #plt.show()
+                    #Galactocentric coords
+                    data_cut = makeCut(sim_data, target_coords_galactocentric[target_name], rot=False)
+                    # Transform galactocentric coordinates to equatorial coordinates
+                    lon, lat = transform_pandas_galactocentric_to_galactic(data_cut)
+                    data_cut_galactic = pd.DataFrame({'Lon': lon, 'Lat': lat})
+                    
+                    #Plotting
+                    handles, labels = plot_hammer_galactic_with_candidate(ax = axes_flat[i], type_name = sim_type,
+                                                                        candidate_label = target_labels[target_name],
+                                                        candidate_coords_equatorial = target_coords_equatorial[target_name],
+                                                        data_cut_galactic = data_cut_galactic, crop = crop)
+
+            plt.tight_layout()
+            plt.suptitle(f"Galactic Coordinates Trajectory Distribution for {particle} nuclei {event_num} event", fontsize=20, y=1.02)
+            fig.legend(handles=handles, labels=labels)
+            if save_name: plt.savefig(save_name, bbox_inches='tight', dpi=300)
+            plt.close()
+            #plt.show()
 
 if __name__ == "__main__":
     #Defining directory where our statistics lies
