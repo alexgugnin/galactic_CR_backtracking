@@ -34,7 +34,9 @@ def plot_sphere(ax, center, radius, color='black', alpha=0.3, resolution=20):
 
     ax.plot_surface(x, y, z, color=color, alpha=alpha, linewidth=0)
 
-def calculate_kde(x, y) -> Tuple[Tuple[np.array, np.array, np.array], float]:
+def calculate_kde(x, y, x_min_shift = 0.2, x_max_shift = 0.4,
+                        y_min_shift = 0.2, y_max_shift = 0.2,
+                        bandwidth_degrees = None, resolution = 600) -> Tuple[np.array, np.array, np.array]:
     '''Calculates pdf using kde with bandwith from the gridsearch
     and returns the denstiy value of needed object for this pdf divided by
     the max density value for this pdf
@@ -50,32 +52,36 @@ def calculate_kde(x, y) -> Tuple[Tuple[np.array, np.array, np.array], float]:
     n = xz.shape[1]
 
     #Creating grid for search and finding best estimator in terms of bandwidth
-    '''
-    print('---STARTING KDE GRIDSEARCH---')
-    start_time = time.time()
-    grid = GridSearchCV(KernelDensity(kernel='gaussian'),
-                    {'bandwidth': np.linspace(0.01, 1, 100)},
-                    cv=20) # 20-fold cross-validation with 1000 bandwidths
-    grid.fit(xz.T)
-    kde = grid.best_estimator_
-    print(f"Gridsearch FINISHED in {time.time() - start_time} s.")
-    print(f"Bandwidth is {grid.best_params_}")
-    '''
+    if not bandwidth_degrees:
+        print('\n---STARTING KDE GRIDSEARCH---')
+        start_time = time.time()
+        grid = GridSearchCV(KernelDensity(kernel='gaussian', metric='haversine'),#metric euclidian?
+                        {'bandwidth': np.linspace(0.01, 0.06, 100)}, #1 to 3 degrees in radians
+                        cv=10) # 20-fold cross-validation with 1000 bandwidths
+        grid.fit(xz.T)
+        kde = grid.best_estimator_
+        print(f"\nGridsearch FINISHED in {time.time() - start_time} s.")
+        print(f"\nBandwidth is {grid.best_params_}")
+    
+    else:
+        #bandwidth N degrees - 6 degrees for shapley task
+        kde = KernelDensity(kernel='gaussian', bandwidth=bandwidth_degrees*np.pi/180).fit(xz.T)
 
-    #bandwidth 6 degrees
-    kde = KernelDensity(kernel='gaussian', bandwidth=6*np.pi/180).fit(xz.T)
+    xmin = x.min() - x_min_shift
+    xmax = x.max() + x_max_shift
+    ymin = y.min() - y_min_shift
+    ymax = y.max() + y_max_shift
 
-    xmin = x.min() - 0.2
-    xmax = x.max() + 0.4
-    ymin = y.min() - 0.2
-    ymax = y.max() + 0.2
-
-    X, Y = np.mgrid[xmin:xmax:600j, ymin:ymax:600j]
+    X, Y = np.mgrid[xmin:xmax:resolution*1j, ymin:ymax:resolution*1j]
     positions = np.vstack([X.ravel(), Y.ravel()])
 
     Z = np.reshape(np.exp(kde.score_samples(positions.T)), X.shape) * len(xz.T) # MULTIPLYING BY NUM OF EVENTS TO ACHIEVE NUM OF EVENTS PER STERRAD
-
-    return (X, Y, Z) #score_samples returns the log density, so exp is needed. Also prob density can be more than 1
+    
+    #Converting to events per square degrees
+    sq_deg_factor = (180 / np.pi)**2
+    Z_sq_deg = Z / sq_deg_factor
+    
+    return (X, Y, Z_sq_deg) #score_samples returns the log density, so exp is needed. Also prob density can be more than 1
 
 
 def visualize_3D_shapley(fname):

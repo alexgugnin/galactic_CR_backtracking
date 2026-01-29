@@ -15,7 +15,7 @@ import os
 
 def get_objects_params():
     distances = {
-        "sgr": 2.9, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
+        "sgr": 12.5, #2.9+-0.2, 8.1+-0.5 https://arxiv.org/pdf/2308.03484, 12.5, 3.8
         "grs": 8.6, #+2-1.6  https://arxiv.org/pdf/1409.2453
         "ss": 5.5, #+-0.2   https://www.aanda.org/articles/aa/full_html/2018/09/aa32488-17/aa32488-17.html
         "ngc": 7.58,#       https://doi.org/10.1093/mnras/stab1475
@@ -99,6 +99,7 @@ def transform_pandas_galactocentric_to_galactic(data_cut):
         data_cut (pd.DataFrame): DataFrame with 'X', 'Y', 'Z' columns in galactocentric coordinates.
     Returns:
         l (np.ndarray): Galactic longitude in degrees.
+        
         b (np.ndarray): Galactic latitude in degrees.
     '''
     

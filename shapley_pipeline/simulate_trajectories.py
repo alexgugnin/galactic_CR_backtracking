@@ -721,7 +721,7 @@ if __name__ == '__main__':
 
     #INSTRUMENTAL FROM PA PAPER
     sigma_energy = 0.07
-    sigma_dir = 0.002 #1 degree directional uncertainty
+    sigma_dir = 1*np.pi/180 #1 degree directional uncertainty
     shapley_coords = pd.read_csv("shapley_with_radii.csv")
     print(shapley_coords)
     exit()

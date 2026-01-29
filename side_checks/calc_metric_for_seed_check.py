@@ -213,7 +213,9 @@ def calculate_kde(data, object_cords) -> Tuple[Tuple[np.array, np.array, np.arra
     and returns the denstiy value of needed object for this pdf divided by
     the max density value for this pdf
     https://gist.github.com/daleroberts/7a13afed55f3e2388865b0ec94cd80d2
-    https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/'''
+    https://jakevdp.github.io/blog/2013/12/01/kernel-density-estimation/
+    
+    COMPARE WITH shapley_pipeline/analyse_trajectories.calculate_kde and remain only one version'''
     xz = np.vstack([data['X'], data['Z']])
     d = xz.shape[0]
     n = xz.shape[1]

@@ -81,7 +81,7 @@ if __name__ == '__main__':
     #triplet = [0]#[22, 23, 30]
     triplet = [22, 23, 30]
     sigma_energy = (0.07, 0.15)
-    sigma_dir = (0.002, 0.003) #1, 1.5 degree directional uncertainty
+    sigma_dir = (1*np.pi/180, 1.5*np.pi/180) #1, 1.5 degree directional uncertainty
 
     seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
     for seed in tqdm(seeds):
