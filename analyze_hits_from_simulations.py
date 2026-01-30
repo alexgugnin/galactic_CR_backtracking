@@ -12,7 +12,7 @@ def hit_count_vs_event_num(data, target, particle):
     
     fig, axes = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
     # Building boxplot for every axis
-    events = sorted(data['event_num'].unique()) # returns [22, 23, 30] for 3 events in Void
+    events = [2, 40, 74]#sorted(data['event_num'].unique()) # returns [2, 40, 74, 22, 23, 30] for 3 events in Void
     events_labels = ["TA-LV-1", "TA-LV-2", "PA-LV"]
     colors = ["#7eb0d5", "#b2e061", "#bd7ebe"]
 
@@ -57,17 +57,17 @@ def hit_count_vs_event_num(data, target, particle):
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95]) # Adjust for suptitle space
 
-    plt.savefig(f'paper_results/projections_and_statistics/boxplots/{target}_{particle}.jpeg', bbox_inches='tight', dpi=300)
+    plt.savefig(f'paper_results/projections_and_statistics/boxplots/{target}_{particle}_far.jpeg', bbox_inches='tight', dpi=300)
     plt.close()
 
 if __name__ == "__main__":
     # Load the simulation hits data
     particles = ['H', 'He', 'C', 'N', 'O', 'Fe']
-    targets = ['grs', 'ss', 'ngc']#['sgr']#
+    targets = ['sgr']#['grs', 'ss', 'ngc']#
 
     #BOXPLOTS
     for target in tqdm(targets):
-        hits_df = pd.read_csv(f"paper_results/projections_and_statistics/{target}/hit_statistics_1000.csv")
+        hits_df = pd.read_csv(f"paper_results/projections_and_statistics/{target}/hit_statistics_1000_far.csv")
         for particle in particles:
             # Group by particle type 
             particle_info = hits_df[hits_df['particle'] == particle]  

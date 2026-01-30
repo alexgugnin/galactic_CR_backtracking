@@ -215,7 +215,7 @@ def gather_data_for_kde(particle, mag_field, target_name, simulations_directory,
         return master_df
 
     data_accumulator = []
-    event_nums = [22, 23, 30]
+    event_nums = [2, 40, 74]
     sim_num = 1000
     sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
 
@@ -264,7 +264,7 @@ def plot_combined_figure_kde(targets_names, simulations_directory, seeds,
                                simulations_directory = simulations_directory, seeds = seeds,
                                target_coords_galactocentric = target_coords_galactocentric, save_directory = save_directory)
     
-    for event_num in [22, 23, 30]:
+    for event_num in [2, 40, 74]:
         #Plotting figure with 4 sim types for every event number
         if not crop: fig, axes = plt.subplots(2, 2, figsize=(16, 9), subplot_kw={'projection': 'hammer'})
         if crop: fig, axes = plt.subplots(2, 2, figsize=(16, 9))
@@ -273,7 +273,7 @@ def plot_combined_figure_kde(targets_names, simulations_directory, seeds,
         save_name = os.path.join(save_directory, f"{mag_field}/{particle}/combined_plots_and_artifacts/combined_cropped_maps_{particle}_{event_num}_event_{target_name}_kde.jpeg")
 
         sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
-        type_naming_for_maps = ["BASE FIELD", "STRIATED FIELD", "TURBULENT FIELD", "COMBINED FIELD"]
+        type_naming_for_maps = ["REGULAR FIELD", "STRIATED FIELD", "TURBULENT FIELD", "COMBINED FIELD"]
         event_num_subset = data[data['EventNum'] == event_num]
 
         #Calculating all KDE before plotting to have same color scale
@@ -355,7 +355,7 @@ if __name__ == "__main__":
     #Checking metrics for candidates
     target_coords_galactocentric, distances, target_coords_equatorial = get_objects_params()
     #targets_names = list(target_coords_galactocentric.keys())[:1] # ALL AVAILABLE OBJECTS
-    targets_names = ['ss']
+    targets_names = ['sgr']
     #targets_names = ['shapley']
     #save_name = os.path.join(save_directory, f"combined_cropped_maps_C_30_event_SGR_seed4200.png")
     seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
@@ -374,5 +374,5 @@ if __name__ == "__main__":
                          seeds = seeds,
                          target_coords_galactocentric = target_coords_galactocentric, 
                          target_coords_equatorial = target_coords_equatorial, 
-                         particle = 'O', mag_field = 'JF12',
+                         particle = 'C', mag_field = 'JF12',
                          save_directory = save_directory, crop = True,)

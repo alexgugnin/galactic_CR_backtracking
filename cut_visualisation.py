@@ -123,7 +123,7 @@ def transform_pandas_galactocentric_to_galactic(data_cut):
     
     return lon, lat
 
-def plot3D(data, objects) -> None:
+def plot3D(data, objects=None) -> None:
     fig = plt.figure(figsize=(12,12))
     ax = plt.subplot(111, projection='3d')
 
@@ -156,6 +156,7 @@ def plot3D(data, objects) -> None:
         sgr_cords=[0, d*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.2, d*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), d*np.sin(0.77*np.pi/180)]
         ax.scatter(sgr_cords[1], sgr_cords[2], sgr_cords[3], marker='+', c='r', s=70) #43.02 0.77 12.5±1.7
     '''
+    '''
     ax.scatter(objects['sgr'][1], objects['sgr'][2], objects['sgr'][3], marker='+', c='red', s=70)
     #plt.text(0.751-2*0.751 - 15*np.pi/180, 0.0135+7*np.pi/180, 'SGR 1900+14', fontsize=8, fontweight='bold')
     #Plot GRS 1915+105
@@ -164,7 +165,7 @@ def plot3D(data, objects) -> None:
     ax.scatter(objects['ss'][1], objects['ss'][2], objects['ss'][3], marker='+', c='purple', s=70) #39.69 -2.24 5.5±0.2
     #Plot NGC 6760 Кулясте скупчення 36.11 -3.9 7.4±0.4
     ax.scatter(objects['ngc'][1], objects['ngc'][2], objects['ngc'][3], marker='+', c='magenta', s=70) #36.11 -3.9 7.4±0.4
-
+    '''
     from matplotlib.lines import Line2D
     legend_elements = [Line2D([0], [0], color='blue', lw=1, label='Simulated CRs'),
                         Line2D([0], [0], marker='+', color='red', label='SGR 1900+14', markerfacecolor='red', linestyle='', markersize=8),
@@ -516,7 +517,7 @@ if __name__ == '__main__':
     #Sim params
     mag_field = 'JF12'
     particles = ['H', 'He', 'C', 'N', 'O', 'Fe']
-    event_nums = [22, 23, 30]
+    event_nums = [2, 40, 74]
     sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
     sim_num = 1000
     seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
@@ -524,7 +525,11 @@ if __name__ == '__main__':
     #Targets
     objects_coords_galactocentric, distances, object_coords_equatorial = get_objects_params()
     targets_names = list(objects_coords_galactocentric.keys()) # All available objects
-    targets_names = ['sgr']
+    targets_names = ['ss', 'grs', 'ngc']
+
+    #plot3D(np.genfromtxt(f'trajectories_data/JF12/H/base/traj_PA+TA_H_40_event_1000sims_seed1000.txt', 
+    #                                        unpack=True, skip_footer=1))
+    #exit()
 
     '''
     2D SURFACE APPROACH
@@ -533,7 +538,7 @@ if __name__ == '__main__':
     for target in tqdm(targets_names, desc="Targets", leave=False):
         target_results_list = []
         output_dir = f'paper_results/projections_and_statistics/{target}/'
-        output_csv = f'{output_dir}hit_statistics_1000_close.csv'
+        output_csv = f'{output_dir}hit_statistics_1000.csv'
 
         #Check existing calculations to avoid overwriting
         processed_combinations = set()

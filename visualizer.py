@@ -228,8 +228,12 @@ class SimMap(object):
             lons, lats = inits_transform(self.initial_lons, self.initial_lats)
             #ta_lons, ta_lats = [lons[16], lons[18], lons[19], lons[20], lons[22], lons[23], lons[24], lons[25]], [lats[16], lats[18], lats[19], lats[20], lats[22], lats[23], lats[24], lats[25]]
             #pa_lons, pa_lats = [lons[30]], [lats[30]]
-            ta_lons, ta_lats = lons[:28], lats[:28]
-            pa_lons, pa_lats = lons[28:], lats[28:]
+            #ta_lons, ta_lats = lons[:28], lats[:28] Synth data
+            #pa_lons, pa_lats = lons[28:], lats[28:] Synth data
+            ta_lons, ta_lats = lons[:72], lats[:72] 
+            #ta_lons, ta_lats = [lons[2], lons[40]], [lats[2], lats[40]]
+            pa_lons, pa_lats = lons[72:], lats[72:]
+            #pa_lons, pa_lats = [lons[74]], [lats[74]]
             #pa_lons, pa_lats = lons, lats
             plt.scatter(pa_lons, pa_lats, marker='*', c='orange', s=50)
             plt.scatter(ta_lons, ta_lats, marker='*', c='gold', s=50)

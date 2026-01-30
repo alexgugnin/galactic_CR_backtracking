@@ -54,14 +54,20 @@ if __name__ == '__main__':
             temp_event = line.split()
             events.append((temp_event[0], float(temp_event[6]), float(temp_event[7]), float(temp_event[8])))
     '''
-    
+    '''
     events = []
     with open('data/auger+TA_combined.dat', 'r') as infile:
         for line in infile:
             if line.split()[0] == '#': continue
             temp_event = line.split()
             events.append((temp_event[0], float(temp_event[6]), float(temp_event[7]), float(temp_event[8])))
-    
+    '''
+    events = []
+    with open('data/auger+TA_combined_old_data.dat', 'r') as infile:
+        for line in infile:
+            if line.split()[0] == '#': continue
+            temp_event = line.split()
+            events.append((temp_event[0], float(temp_event[6]), float(temp_event[7]), float(temp_event[8])))
     '''
     events = []
     with open('data/Auger_lowE_shapley.dat', 'r') as infile:
@@ -98,8 +104,8 @@ if __name__ == '__main__':
     Visualizing results achieved
     '''
     map = SimMap(total_results, initial_lats, initial_lons, particles=['H'])#['H', 'aH', 'He', 'C', 'Fe']
-    map.setSaveName('harvard_conference_plots/full_map_sources.png')
-    map.setTitle("Events from PA + TA observatories with E > 100 EeV")
+    map.setSaveName('harvard_conference_plots/full_map_sources_old_dataset.jpeg')
+    map.setTitle("Events from Pierre Auger and Telescope Array observatories with E > 100 EeV")
     map.setSourcesFlags({'mags': True, 'sbgs': True, 'clusts': True})
     map.plotMap(sim = False, transform=True, sgr=True, shapley=True, legend=True, saving=True, custom_frame=False)
 
