@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from side_checks.calc_metric_for_seed_check import makeCut, calcPerpPlane, calcEdge, r_mat, calculate_kde, calculate_hit, calculate_mahalanobis
 import astropy.units as u
 from astropy.coordinates import SkyCoord
+from _3D_trajectory import get_reproducible_seeds
 
 import glob
 import os
@@ -516,18 +517,19 @@ def plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, 
 if __name__ == '__main__':
     #Sim params
     mag_field = 'JF12'
-    particles = ['H', 'He', 'C', 'N', 'O', 'Fe']
-    event_nums = [2, 40, 74]
+    particles = ['C']#['H', 'He', 'C', 'N', 'O', 'Fe']
+    event_nums = [2]#[2, 40, 74]
     sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
-    sim_num = 1000
-    seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+    sim_num = 50
+    #seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+    seeds = get_reproducible_seeds(100, master_seed=42)
 
     #Targets
     objects_coords_galactocentric, distances, object_coords_equatorial = get_objects_params()
     targets_names = list(objects_coords_galactocentric.keys()) # All available objects
-    targets_names = ['ss', 'grs', 'ngc']
+    targets_names = ['ss']#['ss', 'grs', 'ngc']#['sgr']#
 
-    #plot3D(np.genfromtxt(f'trajectories_data/JF12/H/base/traj_PA+TA_H_40_event_1000sims_seed1000.txt', 
+    #plot3D(np.genfromtxt(f'trajectories_data/JF12/Fe/base/traj_PA+TA_Fe_2_event_1000sims_seed1000.txt', 
     #                                        unpack=True, skip_footer=1))
     #exit()
 
@@ -538,7 +540,7 @@ if __name__ == '__main__':
     for target in tqdm(targets_names, desc="Targets", leave=False):
         target_results_list = []
         output_dir = f'paper_results/projections_and_statistics/{target}/'
-        output_csv = f'{output_dir}hit_statistics_1000.csv'
+        output_csv = f'{output_dir}hit_statistics_{sim_num}.csv'
 
         #Check existing calculations to avoid overwriting
         processed_combinations = set()

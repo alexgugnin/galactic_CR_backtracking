@@ -175,8 +175,8 @@ class SimMap(object):
         plt.text(lons[2]-2*np.pi/180, lats[2], clust_names[2], fontsize=10, fontweight='bold')#Norm
         plt.text(lons[3]-4*np.pi/180, lats[3], clust_names[3], fontsize=10, fontweight='bold')#PP
         plt.text(lons[4]-4*np.pi/180, lats[4], clust_names[4], fontsize=10, fontweight='bold')#PI
-        plt.text(lons[5]+10*np.pi/180, lats[5]-10*np.pi/180, clust_names[5], fontsize=10, fontweight='bold')#Coma
-        plt.text(lons[6]+10*np.pi/180, lats[6], clust_names[6], fontsize=10, fontweight='bold')#Virgo
+        #plt.text(lons[5]+10*np.pi/180, lats[5]-10*np.pi/180, clust_names[5], fontsize=10, fontweight='bold')#Coma
+        #plt.text(lons[6]+10*np.pi/180, lats[6], clust_names[6], fontsize=10, fontweight='bold')#Virgo
         plt.text(lons[7]+1*np.pi/180, lats[7], clust_names[7], fontsize=10, fontweight='bold')#F
         plt.text(lons[8]+1*np.pi/180, lats[8], clust_names[8], fontsize=10, fontweight='bold')#E
         plt.text(47.66190266*np.pi/180-2*47.66190266*np.pi/180-15*np.pi/180, 10.98251055*np.pi/180 + 15*np.pi/180, 'Local Void', fontsize=10, fontweight='bold')#Local Void
@@ -210,7 +210,7 @@ class SimMap(object):
         plt.figure(figsize=self.figsize)
         plt.subplot(111, projection = self.projection)
         plt.grid(True)
-        plt.title(self.title, fontsize = 12)#, y=1.05)
+        plt.title(self.title, fontsize = 12, y=1.01)
 
         #Plotting simulations
         if sim:
@@ -266,6 +266,7 @@ class SimMap(object):
                 lons = source_transform(lons)
                 for i in range(len(lons)):
                     if clust_names[i] == "Coma": continue
+                    if clust_names[i] == "Virgo": continue
                     F = (X-lons[i])**2 + (Y-lats[i])**2 - (clust_radii[i]*np.pi/180)**2
                     plt.contour(X,Y,F,[0],colors='black',linewidths=0.75)
                 F = (X-(47.66190266*np.pi/180-2*47.66190266*np.pi/180))**2 + (Y-10.98251055*np.pi/180)**2 - (40*np.pi/180)**2#Local Void
@@ -285,15 +286,15 @@ class SimMap(object):
         y = np.linspace(-np.pi/2, np.pi/2, 10000)
         X, Y = np.meshgrid(x,y)
 
-        F = (X-(0.751-2*0.751 + 10*np.pi/180))**2 + (Y - (0.0135 - 3*np.pi/180))**2 - (5*np.pi/180)**2
+        F = (X-(0.751-2*0.751 + 8*np.pi/180))**2 + (Y - (0.0135 - 4*np.pi/180))**2 - (5*np.pi/180)**2
         plt.contour(X,Y,F,[0],colors='red',linewidths=0.75)
-        plt.text(0.751-2*0.751 - 5*np.pi/180, 0.0135 - 12*np.pi/180, '2 TA + 1 PA EHECR triplet', fontsize=8
+        plt.text(0.751-2*0.751 - 5*np.pi/180, 0.0135 - 12.5*np.pi/180, 'EHECR triplet', fontsize=8
                  , fontweight='bold', color='red')
         
         #SGR
         if sgr:
             sgr = plt.scatter(0.751-2*0.751, 0.0135, marker='+', c='red', s=70)#SGR 1900+14
-            plt.text(0.751-2*0.751 - 15*np.pi/180, 0.0135+7*np.pi/180, 'SGR 1900+14', fontsize=8, fontweight='bold')#SGR 1900+14
+            plt.text(0.751-2*0.751 - 14*np.pi/180, 0.0135+5.5*np.pi/180, 'SGR 1900+14', fontsize=8, fontweight='bold')#SGR 1900+14
         #Plot GRS 1915+105
         if grs:
             grs_cords = []
@@ -310,7 +311,7 @@ class SimMap(object):
             shapley_cords = {"RA": 201.9934, "DEC": -31.5014, "z": 0.0487}
             cords = SkyCoord(ra=shapley_cords["RA"]*u.deg, dec=shapley_cords["DEC"]*u.deg, frame='icrs').transform_to("galactic")
             plt.scatter((2*np.pi*u.rad - cords.l.to(u.rad)).value, cords.b.to(u.rad).value, marker='+', c='magenta', s=70)
-            plt.text((2*np.pi*u.rad - cords.l.to(u.rad)).value - np.pi*3/180, (cords.b.to(u.rad)).value + 5*np.pi/180, 
+            plt.text((2*np.pi*u.rad - cords.l.to(u.rad)).value - np.pi*12/180, (cords.b.to(u.rad)).value + 5*np.pi/180, 
                      'Shapley Center', fontsize=8, fontweight='bold')
         #Legend
         if legend: plt.legend(handles=self.makeLegend(), loc='upper right')
@@ -347,7 +348,7 @@ class SimMap(object):
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
         if saving: plt.savefig(self.save_name, dpi=300, bbox_inches='tight',
-                               pad_inches=0, transparent=True)
+                               pad_inches=0, transparent=False)
         plt.show()
 
 
@@ -493,8 +494,8 @@ def visualizeTotal(total_results, initial_lats:list, initial_lons:list) -> None:
     plt.text(clusttemp_lons[2]-2*np.pi/180, clust_lats[2], clust_names[2], fontsize=10, fontweight='bold')#Norm
     plt.text(clusttemp_lons[3]-4*np.pi/180, clust_lats[3], clust_names[3], fontsize=10, fontweight='bold')#PP
     plt.text(clusttemp_lons[4]-4*np.pi/180, clust_lats[4], clust_names[4], fontsize=10, fontweight='bold')#PI
-    plt.text(clusttemp_lons[5]+10*np.pi/180, clust_lats[5]-10*np.pi/180, clust_names[5], fontsize=10, fontweight='bold')#Coma
-    plt.text(clusttemp_lons[6]+10*np.pi/180, clust_lats[6], clust_names[6], fontsize=10, fontweight='bold')#Virgo
+    #plt.text(clusttemp_lons[5]+10*np.pi/180, clust_lats[5]-10*np.pi/180, clust_names[5], fontsize=10, fontweight='bold')#Coma
+    #plt.text(clusttemp_lons[6]+10*np.pi/180, clust_lats[6], clust_names[6], fontsize=10, fontweight='bold')#Virgo
     plt.text(clusttemp_lons[7]+1*np.pi/180, clust_lats[7], clust_names[7], fontsize=10, fontweight='bold')#F
     plt.text(clusttemp_lons[8]+1*np.pi/180, clust_lats[8], clust_names[8], fontsize=10, fontweight='bold')#E
     plt.text(47.66190266*np.pi/180-2*47.66190266*np.pi/180-15*np.pi/180, 10.98251055*np.pi/180 + 15*np.pi/180, 'Local Void', fontsize=10, fontweight='bold')#Local Void

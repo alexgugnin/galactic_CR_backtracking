@@ -63,7 +63,7 @@ def hit_count_vs_event_num(data, target, particle):
 if __name__ == "__main__":
     # Load the simulation hits data
     particles = ['H', 'He', 'C', 'N', 'O', 'Fe']
-    targets = ['sgr']#['grs', 'ss', 'ngc']#
+    targets = ['sgr']#['ss', 'grs', 'ngc']#
 
     #BOXPLOTS
     for target in tqdm(targets):
