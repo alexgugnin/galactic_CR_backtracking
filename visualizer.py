@@ -120,6 +120,7 @@ class SimMap(object):
         with open(data_path, 'r') as mags:
             for mag in mags:
                 if mag.split()[0][0] == 'N': continue
+                #if mag.split(',')[0] == 'SGR 1935+2154' or mag.split(',')[0] == 'SGR 2013+34' or mag.split(',')[0] == 'GRB1900+14': continue
                 mags_lons.append(float(mag.split(',')[7]))
                 mags_lats.append(float(mag.split(',')[8]))
         mags_lons, mags_lats = (np.array(mags_lons)/180)*np.pi, (np.array(mags_lats)/180)*np.pi
@@ -186,17 +187,27 @@ class SimMap(object):
         legend_elements = [Line2D([0], [0], color='black', lw=1, label='Galaxy clusters'),
                             Line2D([0], [0], color='purple', lw=1, label='Local Void'),
                             #Line2D([0], [0], marker='*', color='orange', label='CRs E > 100 EeV', markerfacecolor='orange', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='*', color='orange', label='CRs from PA', markerfacecolor='orange', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='*', color='orange', label='CRs from PAO', markerfacecolor='orange', linestyle='', markersize=8),
                             Line2D([0], [0], marker='*', color='gold', label='CRs from TA', markerfacecolor='gold', linestyle='', markersize=8),
                             #Line2D([0], [0], marker='o', color='blue', label='Simulated CRs', markerfacecolor='blue', linestyle='', markersize=8), #make variable colors
                             Line2D([0], [0], marker='p', color='pink', label='Magnetars', markerfacecolor='pink', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='D', color='turquoise', label='starburst galaxies', markerfacecolor='turquoise', linestyle='', markersize=8),
-                            Line2D([0], [0], marker='+', color='red', label='SGR 1900+14', markerfacecolor='red', linestyle='', markersize=8)
+                            Line2D([0], [0], marker='D', color='turquoise', label='Starburst galaxies', markerfacecolor='turquoise', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='p', color='pink', label='SGR 1900+14', markerfacecolor='pink', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='+', color='red', label='GRS 1915+105', markerfacecolor='red', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='+', color='purple', label='NGC 6760', markerfacecolor='purple', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='+', color='cyan', label='SS 433', markerfacecolor='cyan', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='+', color='green', label='MGRO 1908', markerfacecolor='green', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='+', color='magenta', label='Cygnus OB2', markerfacecolor='magenta', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='p', color='pink', label='SGR 2013+34', markerfacecolor='pink', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='p', color='pink', label='SGR 1935+2154', markerfacecolor='pink', linestyle='', markersize=8),
+                            Line2D([0], [0], marker='o', color='red', label='EHECR triplet', markerfacecolor='none', markeredgecolor='red', 
+                                   markeredgewidth=1.5, linestyle='', markersize=8)
                             ]
         return legend_elements
 
-    def plotMap(self, sim=True, transform=None, saving=True, sgr=True, grs=False,
-                ss=False, ngc=False, shapley=False, legend=True, custom_frame=False):
+    def plotMap(self, sim=True, transform=None, saving=True, sgr=True, grs=False, sgr_2013=False, sgr_1935=False,
+                ss=False, ngc=False, milagro=False, cygnus=False, aquila = False, shapley=False, legend=True, custom_frame=False):
+        import pandas as pd
         import matplotlib.pyplot as plt
         from matplotlib.patches import Patch
         import numpy as np
@@ -204,6 +215,7 @@ class SimMap(object):
         from astropy.visualization.wcsaxes.frame import EllipticalFrame
         import astropy.units as u
         from astropy.coordinates import SkyCoord
+        from cut_visualisation import transform_pandas_galactocentric_to_galactic
         '''Description'''
 
         #General parameters
@@ -214,6 +226,34 @@ class SimMap(object):
 
         #Plotting simulations
         if sim:
+            events_in_void = [2, 4, 6, 21, 39, 40, 53, 56, 72, 75, 80] 
+            model_configs = [
+                ('JF12', 'X', '#466BC7'),
+                ('UF23', 'D', '#B9C76B')
+            ]
+            
+            particle = 'He'
+            for event in events_in_void: 
+                for model_name, marker_shape, color in model_configs:
+                    
+                    file_path = f'trajectories_data/traj_for_hammer_init_plot/traj_PA+TA_{model_name}_{particle}_{event}_event_1sims.txt'
+                    data = np.genfromtxt(file_path, unpack=True, skip_footer=1)
+
+                    I, X, Y, Z = data
+                    pd_data = pd.DataFrame({'X': X, 'Y': Y, 'Z': Z})
+
+                    # Dropping the initial injection points (the observer singularity)
+                    pd_data = pd_data.iloc[10:].reset_index(drop=True)
+
+                    lon, lat = transform_pandas_galactocentric_to_galactic(pd_data)
+
+                    plt.plot(-lon, lat, color=color, linewidth=1, alpha=0.7)
+                    
+                    #Plot the hollow end marker
+                    plt.plot(-lon[-1], lat[-1], marker=marker_shape, markersize=4, markeredgewidth = 1,
+                            markerfacecolor='none', markeredgecolor=color, linestyle='None', alpha=0.8)
+
+            '''
             for particle, color in zip(self.particles, self.colors):
                 #Change lons and lats to be [0], [1] in future
                 if transform:
@@ -222,21 +262,52 @@ class SimMap(object):
                 else:
                     x, y = np.array([_[1] for _ in np.array(self.total_results[particle])]), np.pi/2 - np.array([_[0] for _ in np.array(self.total_results[particle])])
                     plt.scatter(x, y, marker='o', linewidths=0, s = 10, c=color, alpha=0.5)
+            '''
 
         #Plotting events
         if transform:
             lons, lats = inits_transform(self.initial_lons, self.initial_lats)
-            #ta_lons, ta_lats = [lons[16], lons[18], lons[19], lons[20], lons[22], lons[23], lons[24], lons[25]], [lats[16], lats[18], lats[19], lats[20], lats[22], lats[23], lats[24], lats[25]]
-            #pa_lons, pa_lats = [lons[30]], [lats[30]]
-            #ta_lons, ta_lats = lons[:28], lats[:28] Synth data
-            #pa_lons, pa_lats = lons[28:], lats[28:] Synth data
-            ta_lons, ta_lats = lons[:72], lats[:72] 
+            #ta_lons, ta_lats = lons[:73], lats[:73] 
             #ta_lons, ta_lats = [lons[2], lons[40]], [lats[2], lats[40]]
-            pa_lons, pa_lats = lons[72:], lats[72:]
+            #pa_lons, pa_lats = lons[73:], lats[723:]
             #pa_lons, pa_lats = [lons[74]], [lats[74]]
-            #pa_lons, pa_lats = lons, lats
+
+            #LV SOURCES
+            ta_lons = [lons[2], lons[4], lons[6], lons[21], lons[39], lons[40], lons[53], lons[56], lons[72]]
+            ta_lats = [lats[2], lats[4], lats[6], lats[21], lats[39], lats[40], lats[53], lats[56], lats[72]]
+            pa_lons, pa_lats = [lons[75], lons[80]],  [lats[75], lats[80]]
+
+            #CYG OB2 SOURCES
+            #ta_lons, ta_lats = [lons[21], lons[39], lons[6], lons[56]], [lats[21], lats[39], lats[6], lats[56]]
+            #pa_lons, pa_lats = [],  []
+
+            #SGR 2013 SOURCE
+            #ta_lons, ta_lats = [lons[4]], [lats[4]]
+            #pa_lons, pa_lats = [],  []
+
             plt.scatter(pa_lons, pa_lats, marker='*', c='orange', s=50)
             plt.scatter(ta_lons, ta_lats, marker='*', c='gold', s=50)
+
+            annotate_indices = False
+            if annotate_indices:
+                # Annotate TA points (indices 0-71)
+                for i, (lon, lat) in enumerate(zip(ta_lons, ta_lats)):
+                    plt.annotate(str(i), 
+                                (lon, lat), 
+                                textcoords="offset points", 
+                                xytext=(5, 5), # Offsets the text slightly from the star
+                                ha='center', 
+                                fontsize=8)
+
+                # Annotate PA points (indices 72 and above)
+                for i, (lon, lat) in enumerate(zip(pa_lons, pa_lats)):
+                    original_index = i + 72
+                    plt.annotate(str(original_index), 
+                                (lon, lat), 
+                                textcoords="offset points", 
+                                xytext=(5, 5), # Offsets the text slightly from the star
+                                ha='center', 
+                                fontsize=8)
         else:
             plt.scatter(self.initial_lons, self.initial_lats, marker='*', c='orange', s=50)
         #Plotting sources
@@ -288,31 +359,77 @@ class SimMap(object):
 
         F = (X-(0.751-2*0.751 + 8*np.pi/180))**2 + (Y - (0.0135 - 4*np.pi/180))**2 - (5*np.pi/180)**2
         plt.contour(X,Y,F,[0],colors='red',linewidths=0.75)
-        plt.text(0.751-2*0.751 - 5*np.pi/180, 0.0135 - 12.5*np.pi/180, 'EHECR triplet', fontsize=8
-                 , fontweight='bold', color='red')
+        #plt.text(0.751-2*0.751 + 5*np.pi/180, 0.0135 - 6.5*np.pi/180, 'EHECR triplet', fontsize=8
+        #         , fontweight='bold', color='red')
         
-        #SGR
-        if sgr:
-            sgr = plt.scatter(0.751-2*0.751, 0.0135, marker='+', c='red', s=70)#SGR 1900+14
-            plt.text(0.751-2*0.751 - 14*np.pi/180, 0.0135+5.5*np.pi/180, 'SGR 1900+14', fontsize=8, fontweight='bold')#SGR 1900+14
-        #Plot GRS 1915+105
-        if grs:
-            grs_cords = []
-            plt.scatter(grs_cords[0], grs_cords[1], marker='+', c='green', s=70) #45.37 -0.22 8.6+2.0-1.6
-        #Plot SS 433 Мікроквазар 39.69 -2.24 5.5±0.2
-        if ss:
-            ss_cords = []
-            plt.scatter(ss_cords[0], ss_cords[1], marker='+', c='purple', s=70) #39.69 -2.24 5.5±0.2
-        #Plot NGC 6760 Кулясте скупчення 36.11 -3.9 7.4±0.4
-        if ngc:
-            ngc_cords = []
-            plt.scatter(ngc_cords[0], ngc_cords[1], marker='+', c='magenta', s=70) #36.11 -3.9 7.4±0.4
+        from cut_visualisation import get_objects_params
+        
+        '''
         if shapley:
             shapley_cords = {"RA": 201.9934, "DEC": -31.5014, "z": 0.0487}
             cords = SkyCoord(ra=shapley_cords["RA"]*u.deg, dec=shapley_cords["DEC"]*u.deg, frame='icrs').transform_to("galactic")
             plt.scatter((2*np.pi*u.rad - cords.l.to(u.rad)).value, cords.b.to(u.rad).value, marker='+', c='magenta', s=70)
             plt.text((2*np.pi*u.rad - cords.l.to(u.rad)).value - np.pi*12/180, (cords.b.to(u.rad)).value + 5*np.pi/180, 
                      'Shapley Center', fontsize=8, fontweight='bold')
+        '''
+        sources_config = {
+            'sgr':     {'plot': sgr,     'color': 'pink',     'label': 'SGR 1900+14', 'offset': (-15, 5), 'arrow': True, 'alpha': 0.0},
+            'grs':     {'plot': grs,     'color': 'red',    'label': 'GRS 1915',    'offset': (-10, -6), 'arrow': True, 'alpha': 1.0},
+            'ss':      {'plot': ss,      'color': 'cyan',    'label': 'SS 433',      'offset': (-10, -10), 'arrow': True, 'alpha': 1.0},
+            'ngc':     {'plot': ngc,     'color': 'purple',  'label': 'NGC 6760',    'offset': (-3, -10), 'arrow': True, 'alpha': 1.0},
+            'milagro': {'plot': milagro, 'color': 'green',   'label': 'MGRO 1908',   'offset': (2, 7), 'arrow': True, 'alpha': 1.0},
+            'cygnus':  {'plot': cygnus,  'color': 'magenta',  	'label':'Cyg OB2',    	'offset' :(-5,-3),	'arrow' :False,	'alpha' :1.0},
+            'aquila':  {'plot': aquila,  'color': 'brown',   'label': 'Aquila X-1',  'offset': (8, 0), 'arrow': True, 'alpha': 1.0},
+            'sgr_2013': {'plot': sgr_2013,'color': 'pink',   'label': 'SGR 2013+34', 'offset': (-5, 5), 'arrow': True, 'alpha': 0.0},
+            'sgr_1935': {'plot': sgr_1935,'color': 'pink',   'label': 'SGR 1935+2154', 'offset': (-20, -8), 'arrow': True, 'alpha': 0.0},
+        }
+
+        target_coords_galactocentric, distances, target_coords_equatorial = get_objects_params()
+        
+        for key, config in sources_config.items():
+            if not config['plot']: 
+                continue # Skip if the flag (e.g., sgr=False) is false
+
+            color = config['color']
+            alpha = config['alpha']
+            
+            # Coordinate transformations
+            candidate_coords_equatorial = target_coords_equatorial[key]
+            coords_candidate = SkyCoord(
+                ra=candidate_coords_equatorial["RA"]*u.deg, 
+                dec=candidate_coords_equatorial["DEC"]*u.deg,
+                distance=candidate_coords_equatorial["dist"]*u.kpc, 
+                frame='icrs'
+            ).transform_to("galactic")
+            
+            can_lon = coords_candidate.galactic.l
+            can_lon.wrap_angle = 180 * u.deg
+            lon = can_lon.radian
+            lat = coords_candidate.galactic.b.radian
+            
+            # Plot the scatter point
+            plt.scatter(-lon, lat, marker="+", color=color, s=20, alpha=alpha)
+            
+            # Calculate text position
+            text_lon = -lon + (config['offset'][0] * np.pi / 180)
+            text_lat = lat + (config['offset'][1] * np.pi / 180)
+
+            if config['arrow']:
+                arrow_props = dict(arrowstyle="->", color=color, lw=0.8, shrinkA=2, shrinkB=3)
+            else:
+                arrow_props = None
+
+            # Text + arrows
+            annotate_arrows = False
+            if annotate_arrows:
+                plt.annotate(
+                    config['label'],
+                    xy=(-lon, lat),          # The exact point the arrow should point to
+                    xytext=(text_lon, text_lat), # The coordinates where the text sits
+                    color=color,
+                    fontsize=6,
+                    arrowprops=arrow_props
+                )        
         #Legend
         if legend: plt.legend(handles=self.makeLegend(), loc='upper right')
         #Ticks
@@ -347,176 +464,8 @@ class SimMap(object):
 
         plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
-        if saving: plt.savefig(self.save_name, dpi=300, bbox_inches='tight',
+        if saving: plt.savefig(self.save_name, dpi=600, bbox_inches='tight',
                                pad_inches=0, transparent=False)
         plt.show()
 
 
-def visualizeTotal(total_results, initial_lats:list, initial_lons:list) -> None:
-    '''
-    Graph builder for DataFrame generated by makeDF
-    '''
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
-    from matplotlib.patches import Patch
-    from matplotlib.lines import Line2D
-    from matplotlib.markers import MarkerStyle
-    import numpy as np
-
-    #Graph customization
-    plt.figure(figsize=(12,7))
-    plt.subplot(111, projection = 'hammer')
-    plt.grid(True)
-    plt.title(f"Simulated CR with Z = 1.")
-    '''
-    Patches for multi Z
-    '''
-    H_patch = mpatches.Patch(color='blue', label='H')
-    He_patch = mpatches.Patch(color='orange', label='He')
-    N_patch = mpatches.Patch(color='green', label='N')
-    Fe_patch = mpatches.Patch(color='red', label='Fe')
-    plt.legend(handles=[H_patch, He_patch, N_patch, Fe_patch])
-
-    #Getting coordinates
-    hx, hy = np.array([_[1] for _ in np.array(total_results['H'])]), np.pi/2 - np.array([_[0] for _ in np.array(total_results['H'])])
-    hex, hey = np.array([_[1] for _ in np.array(total_results['He'])]), np.pi/2 - np.array([_[0] for _ in np.array(total_results['He'])])
-    nx, ny = np.array([_[1] for _ in np.array(total_results['C'])]), np.pi/2 - np.array([_[0] for _ in np.array(total_results['C'])])
-    fex, fey = np.array([_[1] for _ in np.array(total_results['Fe'])]), np.pi/2 -  np.array([_[0] for _ in np.array(total_results['Fe'])])
-
-
-    #Sources
-    mags_lons, mags_lats = [], []
-    with open("potential_sources/magnetars.csv", 'r') as mags:
-        for mag in mags:
-            if mag.split()[0][0] == 'N': continue
-            mags_lons.append(float(mag.split(',')[7]))
-            mags_lats.append(float(mag.split(',')[8]))
-    mags_lons, mags_lats = (np.array(mags_lons)/180)*np.pi, (np.array(mags_lats)/180)*np.pi
-
-    sbgs_lons, sbgs_lats = [], []
-    with open("potential_sources/SBGs_under50Mpc.csv", 'r') as sbgs:
-        for sbg in sbgs:
-            if sbg.split()[0][0] == 'N': continue
-            sbgs_lons.append(float(sbg.split(',')[1]))
-            sbgs_lats.append(float(sbg.split(',')[2]))
-    sbgs_lons, sbgs_lats = (np.array(sbgs_lons)/180)*np.pi, (np.array(sbgs_lats)/180)*np.pi
-
-    clust_names, clust_lons, clust_lats, clust_radii = [], [], [], []
-    with open("potential_sources/Clust_circle_ICRC.csv", 'r') as clusts:
-        for clust in clusts:
-            if clust.split()[0][0] == 'I': continue
-            clust_names.append(clust.split(',')[0])
-            clust_lons.append(float(clust.split(',')[3]))
-            clust_lats.append(float(clust.split(',')[4]))
-            clust_radii.append(float(clust.split(',')[5]))
-    clust_lons, clust_lats = (np.array(clust_lons)/180)*np.pi, (np.array(clust_lats)/180)*np.pi
-
-    #Plotting
-    '''
-    TRANSFORMATION for sim
-    '''
-    plt.scatter(sim_transform(hx), hy, marker='o', linewidths=0, s = 15, c='blue', alpha=0.5)
-    plt.scatter(sim_transform(hex), hey, marker='o', linewidths=0, s = 15, c = 'orange', alpha=0.5)
-    plt.scatter(sim_transform(nx), ny, marker='o', linewidths=0, s = 15, c = 'green', alpha=0.5)
-    plt.scatter(sim_transform(fex), fey, marker='o', linewidths=0, s = 15, c = 'red', alpha=0.5)
-
-    initial_lats = np.array([np.pi/2 - lat for lat in initial_lats])
-    '''
-    TRANSFORMATION for inits
-    '''
-    temp = []
-    initial_lons = np.array(initial_lons)
-    for lon in initial_lons:
-        if lon >= np.pi: lon -= np.pi*2
-        temp.append(lon)
-    temp_lons = []
-    for lon in temp:
-        if lon >= 0:
-            lon = lon-2*lon
-            temp_lons.append(lon)
-            continue
-        if lon < 0:
-            lon = lon+2*(-lon)
-            temp_lons.append(lon)
-    plt.scatter(temp_lons, initial_lats, marker='*', c='orange', s=50)#initial state
-
-    '''
-    TRANSFORMATION mags
-    '''
-    mags_lons -= np.pi
-    mtemp_lons = []
-    for lon in mags_lons:
-        if lon >= 0: lon = np.pi - lon
-        if lon < 0: lon = -np.pi - lon
-        mtemp_lons.append(lon)
-
-    plt.scatter(mtemp_lons, mags_lats, marker='p', c='pink', s=25)#magnetars
-
-    '''
-    TRANSFORMATION sbg
-    '''
-    sbgs_lons -= np.pi
-    sbgtemp_lons = []
-    for lon in sbgs_lons:
-        if lon >= 0: lon = np.pi - lon
-        if lon < 0: lon = -np.pi - lon
-        sbgtemp_lons.append(lon)
-    plt.scatter(sbgtemp_lons, sbgs_lats, marker='D', c='turquoise', s=15)#starburst galaxies
-
-    sgr = plt.scatter(0.751-2*0.751, 0.0135, marker='+', c='red', s=70)#SGR 1900+14
-    plt.text(0.751-2*0.751 - 15*np.pi/180, 0.0135+7*np.pi/180, 'SGR 1900+14', fontsize=8, fontweight='bold')#SGR 1900+14
-
-    '''
-    CLUSTERS
-    '''
-    clust_lons -= np.pi
-    clusttemp_lons = []
-    for lon in clust_lons:
-        if lon >= 0: lon = np.pi - lon
-        if lon < 0: lon = -np.pi - lon
-        clusttemp_lons.append(lon)
-
-    x = np.linspace(-np.pi, np.pi, 10000)
-    y = np.linspace(-np.pi/2, np.pi/2, 10000)
-    X, Y = np.meshgrid(x,y)
-    for i in range(len(clusttemp_lons)):
-        if clust_names[i] == "Coma": continue
-        F = (X-clusttemp_lons[i])**2 + (Y-clust_lats[i])**2 - (clust_radii[i]*np.pi/180)**2
-        plt.contour(X,Y,F,[0],colors='black',linewidths=0.75)
-    F = (X-(47.66190266*np.pi/180-2*47.66190266*np.pi/180))**2 + (Y-10.98251055*np.pi/180)**2 - (40*np.pi/180)**2#Local Void
-    plt.contour(X,Y,F,[0],colors='purple',linewidths=0.75)
-    '''
-    CLUSTER TEXT
-    '''
-    plt.text(clusttemp_lons[0]-8*np.pi/180, clust_lats[0], clust_names[0], fontsize=10, fontweight='bold')#Centaurus
-    plt.text(clusttemp_lons[1]-8*np.pi/180, clust_lats[1], clust_names[1], fontsize=10, fontweight='bold')#Hya
-    plt.text(clusttemp_lons[2]-2*np.pi/180, clust_lats[2], clust_names[2], fontsize=10, fontweight='bold')#Norm
-    plt.text(clusttemp_lons[3]-4*np.pi/180, clust_lats[3], clust_names[3], fontsize=10, fontweight='bold')#PP
-    plt.text(clusttemp_lons[4]-4*np.pi/180, clust_lats[4], clust_names[4], fontsize=10, fontweight='bold')#PI
-    #plt.text(clusttemp_lons[5]+10*np.pi/180, clust_lats[5]-10*np.pi/180, clust_names[5], fontsize=10, fontweight='bold')#Coma
-    #plt.text(clusttemp_lons[6]+10*np.pi/180, clust_lats[6], clust_names[6], fontsize=10, fontweight='bold')#Virgo
-    plt.text(clusttemp_lons[7]+1*np.pi/180, clust_lats[7], clust_names[7], fontsize=10, fontweight='bold')#F
-    plt.text(clusttemp_lons[8]+1*np.pi/180, clust_lats[8], clust_names[8], fontsize=10, fontweight='bold')#E
-    plt.text(47.66190266*np.pi/180-2*47.66190266*np.pi/180-15*np.pi/180, 10.98251055*np.pi/180 + 15*np.pi/180, 'Local Void', fontsize=10, fontweight='bold')#Local Void
-
-    '''
-    LEGEND
-    '''
-    legend_elements = [Line2D([0], [0], color='black', lw=1, label='Galaxy clusters'),
-                        Line2D([0], [0], color='purple', lw=1, label='Local Void'),
-                        Line2D([0], [0], marker='*', color='orange', label='CRs E(EeV) > 100', markerfacecolor='orange', linestyle='', markersize=8),
-                        Line2D([0], [0], marker='o', color='blue', label='Simulated CRs', markerfacecolor='blue', linestyle='', markersize=8),
-                        Line2D([0], [0], marker='p', color='pink', label='Magnetars', markerfacecolor='pink', linestyle='', markersize=8),
-                        Line2D([0], [0], marker='D', color='turquoise', label='starburst galaxies', markerfacecolor='turquoise', linestyle='', markersize=8),
-                        Line2D([0], [0], marker='+', color='red', label='SGR 1900+14', markerfacecolor='red', linestyle='', markersize=8)
-                        ]
-    plt.legend(handles=legend_elements, loc='upper right')
-
-    x_tick_labels = ['180°', '150°', '120°', '90°', '60°', '30°', '0°', '330°', '300°', '270°', '240°', '210°']
-    x_tick_positions = [0, -np.pi/4, -np.pi/2, -3*np.pi/4, -np.pi, np.pi, 3*np.pi/4, np.pi/2, np.pi/4]
-    x_tick_positions = [-np.pi, -5*np.pi/6, -2*np.pi/3, -np.pi/2, -np.pi/3, -np.pi/6, 0, np.pi/6, np.pi/3, np.pi/2, 2*np.pi/3, 5*np.pi/6]
-
-    plt.xticks(x_tick_positions, labels=x_tick_labels)
-    plt.savefig('base_test_sim.png', dpi=600)
-    plt.show()

@@ -30,35 +30,7 @@ def plot_hammer_galactic_with_candidate(ax, type_name, candidate_label,
     #Add kde flag check
 
     if not crop:
-        #USING AX PASSED AS ARGUMENT
-        ax.set_title(f"{type_name}", fontsize=14)
-
-        #PLOTTING SIMULATED TRAJECTORIES
-        ax.scatter(-data_cut_galactic["Lon"], data_cut_galactic["Lat"], 
-                alpha=0.5, s=2, color='blue', label=f'Simulations {type_name}')
-
-        #PLOTTING CANDIDATE
-        coords_candidate = SkyCoord(ra=candidate_coords_equatorial["RA"]*u.deg, dec=candidate_coords_equatorial["DEC"]*u.deg,
-                        distance=candidate_coords_equatorial["dist"]*u.kpc, frame='icrs').transform_to("galactic")
-        lon = coords_candidate.galactic.l
-        lon.wrap_angle = 180 * u.deg
-        lon = lon.radian
-        lat = coords_candidate.galactic.b.radian
-        ax.scatter(-lon, lat, marker="+", color='red', s=150, zorder=10, label='Candidate')
-
-        #ADDING CIRCLES AROUND CANDIDATE
-        circle_1deg = 1 * (np.pi/180)  # 1 degree in radians
-        circle_3deg = 3 * (np.pi/180)  # 3 degrees in radians       
-        circle_1deg_x = circle_1deg * np.cos(np.linspace(0, 2 * np.pi, 100))
-        circle_1deg_y = circle_1deg * np.sin(np.linspace(0, 2 * np.pi, 100))
-        circle_3deg_x = circle_3deg * np.cos(np.linspace(0, 2 * np.pi, 100))
-        circle_3deg_y = circle_3deg * np.sin(np.linspace(0, 2 * np.pi, 100))
-        ax.plot(-lon + circle_1deg_x, lat + circle_1deg_y, color='red', linestyle='--', label='1 Degree Circle')
-        ax.plot(-lon + circle_3deg_x, lat + circle_3deg_y, color='green', linestyle='--', label='3 Degree Circle')
-
-        ax.grid(True)
-        ax.legend(loc='upper right', fontsize='small')
-    
+        pass
     if crop:
         #PLOTTING ON TEMP FIGURE TO CROP
         fig_temp = plt.figure(figsize=(16,9))
@@ -82,9 +54,9 @@ def plot_hammer_galactic_with_candidate(ax, type_name, candidate_label,
         lon = lon.radian
         lat = coords_candidate.galactic.b.radian
         ax_temp.scatter(-lon + MAP_SHIFT_X, lat - MAP_SHIFT_Y, marker="P", color='red', s=0.1)#, label='Candidate', zorder=10,)
-        #ax_temp.text(-lon - 4*np.pi/180, lat + 5*np.pi/180, candidate_label, fontsize=3, color = 'red') SGR LABEL COORDS
-        ax_temp.text(-lon - 2*np.pi/180 + MAP_SHIFT_X, lat + 4.5*np.pi/180 - MAP_SHIFT_Y, candidate_label, fontsize=3, color = 'white') # SS LABEL COORDS
-        #ax_temp.text(-lon - 2.5*np.pi/180, lat + 5*np.pi/180, candidate_label, fontsize=3, color = 'red') # NGC LABEL COORDS
+        #ax_temp.text(-lon - 4*np.pi/180 + MAP_SHIFT_X, lat + 4.5*np.pi/180 - MAP_SHIFT_Y, candidate_label, fontsize=3, color = 'white') #SGR LABEL COORDS
+        #ax_temp.text(-lon - 2*np.pi/180 + MAP_SHIFT_X, lat + 4.5*np.pi/180 - MAP_SHIFT_Y, candidate_label, fontsize=3, color = 'white') # SS LABEL COORDS
+        ax_temp.text(-lon - 2.5*np.pi/180 + MAP_SHIFT_X, lat + 4.5*np.pi/180 - MAP_SHIFT_Y, candidate_label, fontsize=3, color = 'white') # NGC LABEL COORDS
         ax_temp.set_axisbelow(True)
 
         #ADDING CIRCLES AROUND CANDIDATE
@@ -104,8 +76,8 @@ def plot_hammer_galactic_with_candidate(ax, type_name, candidate_label,
 
         #GENERAL TICKS
         x_tick_labels = ['', '']
-        x_tick_positions = [-50*np.pi/180 + MAP_SHIFT_X, -35*np.pi/180 + MAP_SHIFT_X] #SS SGR
-        #x_tick_positions = [-45*np.pi/180 + MAP_SHIFT_X, -25*np.pi/180 + MAP_SHIFT_X] #NGC
+        #x_tick_positions = [-50*np.pi/180 + MAP_SHIFT_X, -35*np.pi/180 + MAP_SHIFT_X] #SS SGR
+        x_tick_positions = [-45*np.pi/180 + MAP_SHIFT_X, -30*np.pi/180 + MAP_SHIFT_X] #NGC
         ax_temp.set_xticks(x_tick_positions)
         ax_temp.set_xticklabels(x_tick_labels)
 
@@ -115,10 +87,10 @@ def plot_hammer_galactic_with_candidate(ax, type_name, candidate_label,
         ax_temp.set_yticklabels(y_tick_labels)
 
         #TICKS FOR CROP
-        xticks_crop = [-50*np.pi/180 + 0.5*np.pi/180 + MAP_SHIFT_X, -35*np.pi/180 - 2.8*np.pi/180 + MAP_SHIFT_X] # SGR SS To plot on left of lat lines we add 6 degrees
-        #xticks_crop = [-45*np.pi/180 + 0.5*np.pi/180 + MAP_SHIFT_X, -25*np.pi/180 - 2.8*np.pi/180 + MAP_SHIFT_X] # NGC To plot on left of lat lines we add 6 degrees
-        xlabels_crop = ['50°', '35°'] # SGR SS
-        #xlabels_crop = ['45°', '25°'] # NGC
+        #xticks_crop = [-50*np.pi/180 + 0.5*np.pi/180 + MAP_SHIFT_X, -35*np.pi/180 - 2.8*np.pi/180 + MAP_SHIFT_X] # SGR SS To plot on left of lat lines we add 6 degrees
+        xticks_crop = [-45*np.pi/180 + 0.5*np.pi/180 + MAP_SHIFT_X, -30*np.pi/180 - 2.8*np.pi/180 + MAP_SHIFT_X] # NGC To plot on left of lat lines we add 6 degrees
+        #xlabels_crop = ['50°', '35°'] # SGR SS
+        xlabels_crop = ['45°', '30°'] # NGC
         ax_temp.text(xticks_crop[0], -np.pi/20 - 1.8*np.pi/180 - MAP_SHIFT_Y, xlabels_crop[0], fontsize=4, c = 'white')
         ax_temp.text(xticks_crop[1], -np.pi/20 - 1.8*np.pi/180 - MAP_SHIFT_Y, xlabels_crop[1], fontsize=4, c = 'white')
         #for pos, label in zip(xticks_crop, xlabels_crop):
@@ -126,10 +98,10 @@ def plot_hammer_galactic_with_candidate(ax, type_name, candidate_label,
         
         yticks_crop = [-9*np.pi/180 + 1*np.pi/180 - MAP_SHIFT_Y, 9*np.pi/180 - 2*np.pi/180 - MAP_SHIFT_Y] # To plot on top of lon lines we add 2 degrees
         ylabels_crop = ['-9°', '9°']
-        ax_temp.text(-52.4*np.pi/180 + MAP_SHIFT_X, yticks_crop[0], ylabels_crop[0], fontsize=4, c = 'white')#-9 deg SGR SS
-        ax_temp.text(-51.8*np.pi/180 + MAP_SHIFT_X, yticks_crop[1], ylabels_crop[1], fontsize=4, c = 'white')#9 deg SGR SS
-        #ax_temp.text(-47.4*np.pi/180 + MAP_SHIFT_X, yticks_crop[0], ylabels_crop[0], fontsize=4, c = 'white') #-9 deg NGC
-        #ax_temp.text(-46.8*np.pi/180 + MAP_SHIFT_X, yticks_crop[1], ylabels_crop[1], fontsize=4, c = 'white') #9 deg NGC
+        #ax_temp.text(-52.4*np.pi/180 + MAP_SHIFT_X, yticks_crop[0], ylabels_crop[0], fontsize=4, c = 'white')#-9 deg SGR SS
+        #ax_temp.text(-51.8*np.pi/180 + MAP_SHIFT_X, yticks_crop[1], ylabels_crop[1], fontsize=4, c = 'white')#9 deg SGR SS
+        ax_temp.text(-47.4*np.pi/180 + MAP_SHIFT_X, yticks_crop[0], ylabels_crop[0], fontsize=4, c = 'white') #-9 deg NGC
+        ax_temp.text(-46.8*np.pi/180 + MAP_SHIFT_X, yticks_crop[1], ylabels_crop[1], fontsize=4, c = 'white') #9 deg NGC
         #for pos, label in zip(yticks_crop, ylabels_crop):
         #    ax_temp.text(-np.pi/3 - np.pi/24, pos, label, fontsize=10)
 
@@ -144,8 +116,9 @@ def plot_hammer_galactic_with_candidate(ax, type_name, candidate_label,
 
         #PLOTTING CROPPED IMAGE ON ORIGINAL AX
         map = Image.open('temp.png')
-        ax.imshow(map.crop(((2500+950)*scale_factor, (1800+75)*scale_factor, (3100+850)*scale_factor, (2400-25)*scale_factor)), aspect="equal") # SGR SS (higher resolution for 2400 dpi)
-        #ax.imshow(map.crop((2700*scale_factor, 1800*scale_factor, 3250*scale_factor, 2400*scale_factor)), aspect="auto") # NGC
+        #ax.imshow(map.crop(((2500+950)*scale_factor, (1800+75)*scale_factor, (3100+850)*scale_factor, (2400-25)*scale_factor)), aspect="equal") # SS (higher resolution for 2400 dpi)
+        #ax.imshow(map.crop(((2500+1025)*scale_factor, (1800+50)*scale_factor, (3100+925)*scale_factor, (2400-50)*scale_factor)), aspect="equal") # SGR (higher resolution for 2400 dpi)
+        ax.imshow(map.crop(((2675+825)*scale_factor, (1800+115)*scale_factor, (3225+775)*scale_factor, (2400+15)*scale_factor)), aspect="auto") # NGC
         #ax.imshow(map.crop((4700, 700, 5300, 1300)), aspect="auto") #VALID FOR SHAPLEY TESTING
         ax.set_xticks([])
         ax.set_yticks([])
@@ -213,8 +186,10 @@ def gather_data_for_kde(particle, mag_field, target_name, simulations_directory,
                         target_coords_galactocentric, save_directory, sim_num):  
     '''Gathers all data into a single DataFrame for KDE plotting For one single particle type for one specific
     target'''
-    event_nums = [2]#[2, 40, 74]
-    sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
+    event_nums = [2, 40, 75]
+    jf12_sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
+    uf23_sim_types = ['base']
+    sim_types = jf12_sim_types if mag_field == 'JF12' else uf23_sim_types
 
     csv_save_path = os.path.join(save_directory, f"{mag_field}/{particle}/combined_plots_and_artifacts/kde_data_{sim_num}_{target_name}.csv")
     #Check if data has already been calculated and saved
@@ -282,16 +257,25 @@ def plot_combined_figure_kde(targets_names, simulations_directory, seeds, sim_nu
                                 target_coords_galactocentric = target_coords_galactocentric, save_directory = save_directory,
                                 sim_num = sim_num)
         
-        for event_num in [2]:#[2, 40, 74]:
+        for event_num in [2, 40, 75]:#[2]:#
             #Plotting figure with 4 sim types for every event number
             if not crop: fig, axes = plt.subplots(2, 2, figsize=(16, 9), subplot_kw={'projection': 'hammer'})
-            if crop: fig, axes = plt.subplots(2, 2, figsize=(10, 9), constrained_layout=True)
+            if crop: 
+                if mag_field == 'JF12': fig, axes = plt.subplots(2, 2, figsize=(10, 9), constrained_layout=True)
+                if mag_field == 'UF23': fig, axes = plt.subplots(1, 1, figsize=(5, 5), constrained_layout=True, squeeze=False)
+                
             # Flatten the 2x2 array into a 1D array
             axes_flat = axes.flatten()
             save_name = os.path.join(save_directory, f"{mag_field}/{particle}/combined_plots_and_artifacts/combined_cropped_maps_{particle}_{event_num}_event_{target_name}_kde_simnum_{sim_num}.jpeg")
 
-            sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
-            type_naming_for_maps = ["BASE FIELD", "STRIATED FIELD", "TURBULENT FIELD", "COMBINED FIELD"]
+            jf12_sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
+            uf23_sim_types = ['base']
+            sim_types = jf12_sim_types if mag_field == 'JF12' else uf23_sim_types
+
+            jf12_type_naming_for_maps = ["BASE FIELD", "STRIATED FIELD", "TURBULENT FIELD", "COMBINED FIELD"]
+            uf23_type_naming_for_maps = ["BASE FIELD"]
+            type_naming_for_maps = jf12_type_naming_for_maps if mag_field == 'JF12' else uf23_type_naming_for_maps
+
             event_num_subset = data[data['EventNum'] == event_num]
 
             #Calculating all KDE before plotting to have same color scale
@@ -303,7 +287,7 @@ def plot_combined_figure_kde(targets_names, simulations_directory, seeds, sim_nu
                 sim_type_subset = event_num_subset[event_num_subset['SimType'] == sim_type]
                 xyz_kde = calculate_kde(-sim_type_subset["Lon"] + MAP_SHIFT_X, sim_type_subset["Lat"] - MAP_SHIFT_Y, 
                                         x_min_shift = 0.3, x_max_shift = 0.5, y_min_shift = 0.3, y_max_shift = 0.3,
-                                        bandwidth_degrees = 0.5, resolution = 1000)
+                                        bandwidth_degrees = 1, resolution = 1000)
                 
                 current_max = xyz_kde[2].max()
                 if current_max > vmax_global:
@@ -322,8 +306,8 @@ def plot_combined_figure_kde(targets_names, simulations_directory, seeds, sim_nu
             cmap = 'turbo'
 
             #if vmin_global == np.inf: vmin_global = epsilon
-            vmin_global = 10
-            if vmax_global <= vmin_global: vmax_global = vmin_global + 1.0
+            vmin_global = 35
+            #if vmax_global <= vmin_global: vmax_global = vmin_global + 1.0
 
             norm = mcolors.LogNorm(vmin=vmin_global, vmax=vmax_global)
             for i, sim_type in tqdm(enumerate(sim_types), desc="Plotting KDE", leave=True):
@@ -341,23 +325,6 @@ def plot_combined_figure_kde(targets_names, simulations_directory, seeds, sim_nu
 
             #ADDING COLORBAR
             
-            pos_top_left = axes[0, 0].get_position()
-            pos_bottom_left = axes[1, 0].get_position()
-            pos_top_right = axes[0, 1].get_position()
-            pos_bottom_right = axes[1, 1].get_position()
-
-            # Calculate exact bounds for the colorbar
-            bottom = pos_bottom_right.y0  # Bottom of the lower plots
-            top = pos_top_right.y1        # Top of the upper plots
-            height = top - bottom
-
-            #plt.subplots_adjust(right=0.9) # Leave 10% of space on the right for the bar
-
-            # Creating a dedicated axis for the colorbar
-            # Coordinates are [left, bottom, width, height] in figure fraction (0 to 1)
-            # left=0.92 puts it in the empty space which was just made
-            #cbar_ax = fig.add_axes([0.91, bottom, 0.02, height])
-            
             #KDE SYNTHETIC COLORBAR AS WE KNOW MIN AND MAX VALUES FROM ALL PLOTS
             sm = cm.ScalarMappable(cmap=cmap, norm=norm)
             sm.set_array([])
@@ -370,7 +337,7 @@ def plot_combined_figure_kde(targets_names, simulations_directory, seeds, sim_nu
                                 aspect=30, pad=0.02)
 
             #cbar.ax.yaxis.set_major_formatter(mticker.StrMethodFormatter('{x:,.0f}'))
-            cbar.ax.yaxis.set_major_locator(LogLocator(base=20.0, subs=[1.0, 2.0, 5.0]))
+            cbar.ax.yaxis.set_major_locator(LogLocator(base=50.0, subs=[2.0, 6.0, 10.0, round(vmax_global, -2)/50]))
             formatter = ScalarFormatter()
             formatter.set_scientific(False) # Turn off scientific notation (avoid 1e2)
             cbar.ax.yaxis.set_major_formatter(formatter)
@@ -399,7 +366,7 @@ if __name__ == "__main__":
     #Checking metrics for candidates
     target_coords_galactocentric, distances, target_coords_equatorial = get_objects_params()
     #targets_names = list(target_coords_galactocentric.keys())[:1] # ALL AVAILABLE OBJECTS
-    targets_names = ['ss']
+    targets_names = ['ngc']
     #targets_names = ['shapley']
     #save_name = os.path.join(save_directory, f"combined_cropped_maps_C_30_event_SGR_seed4200.png")
     sim_num = 25
@@ -421,5 +388,5 @@ if __name__ == "__main__":
                          sim_num = sim_num,
                          target_coords_galactocentric = target_coords_galactocentric, 
                          target_coords_equatorial = target_coords_equatorial, 
-                         particles = ['C'], mag_field = 'JF12',
+                         particles = ['He'], mag_field = 'UF23',#['C', 'N', 'O']
                          save_directory = save_directory, crop = True,)

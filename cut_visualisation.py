@@ -20,23 +20,25 @@ def get_objects_params():
         "grs": 8.6, #+2-1.6  https://arxiv.org/pdf/1409.2453
         "ss": 5.5, #+-0.2   https://www.aanda.org/articles/aa/full_html/2018/09/aa32488-17/aa32488-17.html
         "ngc": 7.58,#       https://doi.org/10.1093/mnras/stab1475
-        "shapley": 12.5# Placeholder for Shapley supercluster to check turbulent mag field effects
+        "shapley": 12.5,# Placeholder for Shapley supercluster to check turbulent mag field effects
+        "milagro": 3.2, #https://iopscience.iop.org/article/10.3847/1538-4357/ad698d PSR J1907+0602
+        "cygnus": 1.5,
+        "aquila": 5.1,   #4.4-5.9 https://academic.oup.com/mnras/article/537/1/500/7951526
+        "sgr_2013": 8.8,
+        "sgr_1935": 9.0 #https://iopscience.iop.org/article/10.3847/2041-8213/aba262/pdf
     }
     object_coords_eq = {"sgr": {"RA": 286.8097083, "DEC": 9.3222500, "dist": distances["sgr"]}, #https://arxiv.org/pdf/2412.20050
                      "grs": {"RA": 288.798, "DEC": 10.946, "dist": distances["grs"]},  #https://swift.gsfc.nasa.gov/results/transients/GRS1915p105/ 
                      "ss": {"RA": 287.956, "DEC": 4.99, "dist": distances["ss"]},      #https://swift.gsfc.nasa.gov/results/transients/SS433/
                      "ngc": {"RA": 287.800, "DEC": 1.030, "dist": distances["ngc"]}, #https://doi.org/10.1093/mnras/stab1475
-                     "shapley": {"RA": 192.8015, "DEC": -22.537, "dist": distances["shapley"]}
+                     "shapley": {"RA": 192.8015, "DEC": -22.537, "dist": distances["shapley"]},
+                     "milagro": {"RA": 286.978, "DEC": 6.038, "dist": distances["milagro"]}, #https://iopscience.iop.org/article/10.3847/1538-4357/ad698d PSR J1907+0602
+                     "cygnus": {"RA": 308.300, "DEC": 41.317, "dist": distances["cygnus"]}, #
+                     "aquila": {"RA": 287.817, "DEC": 0.585, "dist": distances["aquila"]}, #https://academic.oup.com/mnras/article/537/1/500/7951526
+                     "sgr_2013": {"RA": 303.4482, "DEC": 34.3309, "dist": distances["sgr_2013"]},
+                     "sgr_1935": {"RA": 293.7320, "DEC": 21.8967, "dist": distances["sgr_1935"]},
                      }
     
-    '''
-    objects_list_old = {
-        "sgr": [0, d_list['sgr']*np.cos(43.02*np.pi/180)*np.cos(0.77*np.pi/180) - 8.2, d_list['sgr']*np.sin(43.02*np.pi/180)*np.cos(0.77*np.pi/180), d_list['sgr']*np.sin(0.77*np.pi/180) + 0.0208],
-        "grs": [0, d_list['grs']*np.cos(45.37*np.pi/180)*np.cos(-0.22*np.pi/180) - 8.2, d_list['grs']*np.sin(45.37*np.pi/180)*np.cos(-0.22*np.pi/180), d_list['grs']*np.sin(-0.22*np.pi/180) + 0.0208],
-        "ss": [0, d_list['ss']*np.cos(39.69*np.pi/180)*np.cos(-2.24*np.pi/180) - 8.2, d_list['ss']*np.sin(39.69*np.pi/180)*np.cos(-2.24*np.pi/180), d_list['ss']*np.sin(-2.24*np.pi/180) + 0.0208],
-        "ngc": [0, d_list['ngc']*np.cos(36.11*np.pi/180)*np.cos(-3.9*np.pi/180) - 8.2, d_list['ngc']*np.sin(36.11*np.pi/180)*np.cos(-3.9*np.pi/180), d_list['ngc']*np.sin(-3.9*np.pi/180) + 0.0208]
-    }
-    '''
     coords_sgr = SkyCoord(ra=object_coords_eq["sgr"]["RA"]*u.deg, dec=object_coords_eq["sgr"]["DEC"]*u.deg,
                       distance=object_coords_eq["sgr"]["dist"]*u.kpc, frame='icrs')
     coords_grs = SkyCoord(ra=object_coords_eq["grs"]["RA"]*u.deg, dec=object_coords_eq["grs"]["DEC"]*u.deg,
@@ -47,19 +49,40 @@ def get_objects_params():
                       distance=object_coords_eq["ngc"]["dist"]*u.kpc, frame='icrs')
     coords_shapley = SkyCoord(ra=object_coords_eq["shapley"]["RA"]*u.deg, dec=object_coords_eq["shapley"]["DEC"]*u.deg,
                       distance=object_coords_eq["shapley"]["dist"]*u.kpc, frame='icrs')
+    coords_milagro = SkyCoord(ra=object_coords_eq["milagro"]["RA"]*u.deg, dec=object_coords_eq["milagro"]["DEC"]*u.deg,
+                      distance=object_coords_eq["milagro"]["dist"]*u.kpc, frame='icrs')
+    coords_cygnus = SkyCoord(ra=object_coords_eq["cygnus"]["RA"]*u.deg, dec=object_coords_eq["cygnus"]["DEC"]*u.deg,
+                      distance=object_coords_eq["cygnus"]["dist"]*u.kpc, frame='icrs')
+    coords_aquila = SkyCoord(ra=object_coords_eq["aquila"]["RA"]*u.deg, dec=object_coords_eq["aquila"]["DEC"]*u.deg,
+                      distance=object_coords_eq["aquila"]["dist"]*u.kpc, frame='icrs')
+    coords_sgr2013 = SkyCoord(ra=object_coords_eq["sgr_2013"]["RA"]*u.deg, dec=object_coords_eq["sgr_2013"]["DEC"]*u.deg,
+                        distance=object_coords_eq["sgr_2013"]["dist"]*u.kpc, frame='icrs')
+    coords_sgr1935 = SkyCoord(ra=object_coords_eq["sgr_1935"]["RA"]*u.deg, dec=object_coords_eq["sgr_1935"]["DEC"]*u.deg,
+                        distance=object_coords_eq["sgr_1935"]["dist"]*u.kpc, frame='icrs')
+    
     
     g_sgr = coords_sgr.transform_to('galactocentric') 
     g_grs = coords_grs.transform_to('galactocentric') 
     g_ss = coords_ss.transform_to('galactocentric') 
     g_ngc = coords_ngc.transform_to('galactocentric') 
     g_shapley = coords_shapley.transform_to('galactocentric')
+    g_milagro = coords_milagro.transform_to('galactocentric')
+    g_cygnus = coords_cygnus.transform_to('galactocentric')
+    g_aquila = coords_aquila.transform_to('galactocentric')
+    g_sgr2013 = coords_sgr2013.transform_to('galactocentric')
+    g_sgr1935 = coords_sgr1935.transform_to('galactocentric')
 
     objects_coords_galactocentric = {
         "sgr": [0, g_sgr.x.value, g_sgr.y.value, g_sgr.z.value],
         "grs": [0, g_grs.x.value, g_grs.y.value, g_grs.z.value],
         "ss": [0, g_ss.x.value, g_ss.y.value, g_ss.z.value],
         "ngc": [0, g_ngc.x.value, g_ngc.y.value, g_ngc.z.value],
-        "shapley": [0, g_shapley.x.value, g_shapley.y.value, g_shapley.z.value]
+        "shapley": [0, g_shapley.x.value, g_shapley.y.value, g_shapley.z.value],
+        "milagro": [0, g_milagro.x.value, g_milagro.y.value, g_milagro.z.value],
+        "cygnus": [0, g_cygnus.x.value, g_cygnus.y.value, g_cygnus.z.value],
+        "aquila": [0, g_aquila.x.value, g_aquila.y.value, g_aquila.z.value],
+        "sgr_2013": [0, g_sgr2013.x.value, g_sgr2013.y.value, g_sgr2013.z.value],
+        "sgr_1935": [0, g_sgr1935.x.value, g_sgr1935.y.value, g_sgr1935.z.value],
     }
 
     return objects_coords_galactocentric, distances, object_coords_eq
@@ -99,16 +122,16 @@ def transform_pandas_galactocentric_to_galactic(data_cut):
     Args:
         data_cut (pd.DataFrame): DataFrame with 'X', 'Y', 'Z' columns in galactocentric coordinates.
     Returns:
-        l (np.ndarray): Galactic longitude in degrees.
+        l (np.ndarray): Galactic longitude in radians.
         
-        b (np.ndarray): Galactic latitude in degrees.
+        b (np.ndarray): Galactic latitude in radians.
     '''
     
     #TRANSFORM GALACTOCENTRIC TO GALACTIC
     galactocentric_coords = SkyCoord(
-        x=data_cut['X'] * u.kpc,
-        y=data_cut['Y'] * u.kpc,
-        z=data_cut['Z'] * u.kpc,
+        x=data_cut['X'].to_numpy() * u.kpc,
+        y=data_cut['Y'].to_numpy() * u.kpc,
+        z=data_cut['Z'].to_numpy() * u.kpc,
         representation_type = 'cartesian',
         frame = 'galactocentric'
     )
@@ -516,18 +539,25 @@ def plot_xz_from_above_projection(data, data_cut, target_coords_galactocentric, 
     
 if __name__ == '__main__':
     #Sim params
-    mag_field = 'JF12'
-    particles = ['C']#['H', 'He', 'C', 'N', 'O', 'Fe']
-    event_nums = [2]#[2, 40, 74]
-    sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
-    sim_num = 50
+    mag_field = 'UF23'
+    particles = ['Si']
+    event_nums_triplet = [2, 40, 75]
+    event_nums_cygnus = [21, 39, 6, 56]
+    event_nums_sgr2013 = [4] 
+    event_nums_sgr1935 = event_nums_triplet
+
+    event_nums = event_nums_cygnus
+    #sim_types = ['base', 'striated', 'turbulent', 'striated+turbulent']
+    sim_types = ['base']
+
+    sim_num = 25
     #seeds = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
-    seeds = get_reproducible_seeds(100, master_seed=42)
+    seeds = get_reproducible_seeds(400, master_seed=42)
 
     #Targets
     objects_coords_galactocentric, distances, object_coords_equatorial = get_objects_params()
     targets_names = list(objects_coords_galactocentric.keys()) # All available objects
-    targets_names = ['ss']#['ss', 'grs', 'ngc']#['sgr']#
+    targets_names = ['cygnus']#['sgr_1935']#['aquila', 'milagro', 'ss', 'grs', 'ngc', 'sgr']#['sgr_2013']#['aquila', 'milagro']#['ss', 'grs', 'ngc']#
 
     #plot3D(np.genfromtxt(f'trajectories_data/JF12/Fe/base/traj_PA+TA_Fe_2_event_1000sims_seed1000.txt', 
     #                                        unpack=True, skip_footer=1))
@@ -550,7 +580,7 @@ if __name__ == '__main__':
                 # Create a set of tuples (particle, event_num, sim_type) that are already done
                 # We convert event_num to int to ensure matching works correctly
                 for _, row in existing_df.iterrows():
-                    processed_combinations.add((row['particle'], int(row['event_num']), row['sim_type']))
+                    processed_combinations.add((row['particle'], int(row['event_num']), row['sim_type'], row['mag_field']))
                 print(f"Found {len(existing_df)} existing records for {target}. Skipping them.")
             except pd.errors.EmptyDataError:
                 pass # File exists but is empty
@@ -561,7 +591,7 @@ if __name__ == '__main__':
                     for sim_type in sim_types:
 
                         #Skip already processed combinations
-                        if (particle, event_num, sim_type) in processed_combinations:
+                        if (particle, event_num, sim_type, mag_field) in processed_combinations:
                             continue
 
                         target_coords_galactocentric = objects_coords_galactocentric[target]

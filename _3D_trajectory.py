@@ -94,13 +94,15 @@ if __name__ == '__main__':
     Sim for 4 particles for 1 event(third one)
     '''
     #particles = [- nucleusId(1,1), - nucleusId(4,2), - nucleusId(12,6), 
-    #           - nucleusId(14,7), - nucleusId(16,8), - nucleusId(52,26)]
-    particles = [- nucleusId(12,6)] 
-    particle_alias = 'C'
-    mag_model_alias = 'JF12'
-    #events_in_void = [16, 18, 19, 20, 22, 23, 24, 25, 30] Not actual
+    #           - nucleusId(14,7), - nucleusId(16,8), - nucleusId(28,14),- nucleusId(52,26)]
+    particles = [- nucleusId(4,2)] 
+    particle_alias = 'He'
+    mag_model_alias = 'UF23'
+    events_in_void = [2, 4, 6, 21, 39, 40, 53, 56, 72, 75, 80] 
+    events_for_cygnus = [21, 39, 6, 56]
     #triplet = [0]#[22, 23, 30]
-    triplet = [40, 74]#[2, 40, 74]
+    triplet = [2, 40, 75] #3, 41, 76 true indices
+    events_sgr2013 = [4]
 
     #Uncertainties
     sigma_energy = (0.07, 0.15) #https://arxiv.org/pdf/2206.13492, https://www.science.org/doi/10.1126/science.abo5095
@@ -111,13 +113,25 @@ if __name__ == '__main__':
     seeds = get_reproducible_seeds(400, master_seed=42)
     NUM_OF_SIMS = 25
 
+    #FOR HAMMER INITIAL PICTURE WITH TRAJECTORIES
+    #seeds = [42]
+    #NUM_OF_SIMS = 1
+    
+    event_indexes = events_for_cygnus
+
+    #jf12_components = ['base', 'striated', 'turbulent', 'striated+turbulent']
+    jf12_components = ['base']
+    uf23_components = ['base']
     for seed in tqdm(seeds, desc=f'Seeds, {particle_alias}'):
-        for mag_component_alias in tqdm(['base', 'striated', 'turbulent', 'striated+turbulent'], leave=False):
+        for mag_component_alias in tqdm(uf23_components, leave=False):
             R = Random(seed)
 
             #Mag component setup
             if mag_component_alias == 'base':
-                B = JF12Field()
+                if mag_model_alias == 'JF12':
+                    B = JF12Field()
+                else:
+                    B = UF23Field(UF23Field.base)
             elif mag_component_alias == 'striated':
                 B = JF12Field()
                 B.randomStriated(seed)
@@ -129,12 +143,13 @@ if __name__ == '__main__':
                 B.randomStriated(seed)
                 B.randomTurbulent(seed)
 
-            for event_idx in triplet:
+            for event_idx in event_indexes:
                 # simulation setup
                 sim = ModuleList()
                 sim.add(PropagationCK(B, 1e-4, 0.1 * parsec, 100 * parsec))
                 sim.add(SphericalBoundary(Vector3d(0), 20 * kpc))
                 output = MyTrajectoryOutput(f'trajectories_data/{mag_model_alias}/{particle_alias}/{mag_component_alias}/traj_PA+TA_{particle_alias}_{event_idx}_event_{NUM_OF_SIMS}sims_seed{seed}.txt')
+                #output = MyTrajectoryOutput(f'trajectories_data/traj_for_hammer_init_plot/traj_PA+TA_{mag_model_alias}_{particle_alias}_{event_idx}_event_{NUM_OF_SIMS}sims.txt')
                 sim.add(output)
 
                 event = events[event_idx]
@@ -155,18 +170,24 @@ if __name__ == '__main__':
 
                 for pid in particles:
                     for i in range(NUM_OF_SIMS):
-                        if int(event[0]) < 72:
+                        if int(event[0]) < 73:
                             #TA EVENTS
                             #Harmonization according to https://lss.fnal.gov/archive/2025/conf/fermilab-conf-25-0486.pdf
                             mean_energy_harmonized = 10 * EeV * np.exp(alpha)*(mean_energy/(10 * EeV))**beta
                             energy = R.randNorm(mean_energy_harmonized, sigma_energy[1]*mean_energy_harmonized)
+                            #energy = mean_energy_harmonized
                             #direction = R.randVectorAroundMean(mean_dir, sigma_dir[1])
                             direction = R.randFisherVector(mean_dir, 2.278/(sigma_dir[1]**2))
+                            #direction = mean_dir
+                            #print("TA event idx:", event_idx, "energy (EeV):", mean_energy_harmonized/EeV)
                         else:
                             #AUGER EVENTS
                             energy = R.randNorm(mean_energy, sigma_energy[0]*mean_energy)
+                            #energy = mean_energy
                             #direction = R.randVectorAroundMean(mean_dir, sigma_dir[0])
                             direction = R.randFisherVector(mean_dir, 2.278/(sigma_dir[0]**2))
+                            #direction = mean_dir
+                            #print("AUGER event idx:", event_idx, "energy (EeV):", mean_energy/EeV)
 
                         candidate = Candidate(ParticleState(pid, energy, position, direction))
                         sim.run(candidate)

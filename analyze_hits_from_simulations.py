@@ -3,7 +3,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def hit_count_vs_event_num(data, target, particle):
+def hit_count_vs_event_num(data, target, particle, mag_field, events, events_labels):
     """
     Create a box plot showing the distribution of hit counts for each event number.
     """
@@ -12,8 +12,8 @@ def hit_count_vs_event_num(data, target, particle):
     
     fig, axes = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
     # Building boxplot for every axis
-    events = [2, 40, 74]#sorted(data['event_num'].unique()) # returns [2, 40, 74, 22, 23, 30] for 3 events in Void
-    events_labels = ["TA-LV-1", "TA-LV-2", "PA-LV"]
+    events = events#sorted(data['event_num'].unique()) # returns [2, 40, 74, 22, 23, 30] for 3 events in Void
+    events_labels = events_labels
     colors = ["#7eb0d5", "#b2e061", "#bd7ebe"]
 
     for i, degree in enumerate(degrees):
@@ -57,19 +57,33 @@ def hit_count_vs_event_num(data, target, particle):
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95]) # Adjust for suptitle space
 
-    plt.savefig(f'paper_results/projections_and_statistics/boxplots/{target}_{particle}_far.jpeg', bbox_inches='tight', dpi=300)
+    plt.savefig(f'paper_results/projections_and_statistics/boxplots/{target}_{particle}_{mag_field}.jpeg', bbox_inches='tight', dpi=300)
     plt.close()
 
 if __name__ == "__main__":
     # Load the simulation hits data
-    particles = ['H', 'He', 'C', 'N', 'O', 'Fe']
-    targets = ['sgr']#['ss', 'grs', 'ngc']#
+    particles = ['Si']#['H', 'He', 'C', 'N', 'O']
+    targets = ['cygnus']#['sgr_1935']#['aquila', 'milagro', 'ss', 'grs', 'ngc', 'sgr']#['sgr_2013']#['ss', 'grs', 'ngc']#['milagro', 'aquila']#['ss', 'grs', 'ngc']#
+    mag_field = 'UF23' #'JF12' # 
+    events_triplet = [2, 40, 75]
+    events_cygnus = [21, 39, 6, 56]
+    events_labels_triplet = ["TA-LV-1", "TA-LV-2", "PA-LV"]
+    events_labels_cygnus = [21, 39, 6, 56]
+    events_sgr2013 = [4]
+    events_labels_sgr2013 = ["TA-Sgr2013"]
+    events_sgr1935 = events_triplet
+    events_labels_sgr1935 = events_labels_triplet
+
+    events = events_cygnus
+    events_labels = events_labels_cygnus
 
     #BOXPLOTS
     for target in tqdm(targets):
-        hits_df = pd.read_csv(f"paper_results/projections_and_statistics/{target}/hit_statistics_1000_far.csv")
+        hits_df = pd.read_csv(f"paper_results/projections_and_statistics/{target}/hit_statistics_25.csv")
         for particle in particles:
             # Group by particle type 
-            particle_info = hits_df[hits_df['particle'] == particle]  
+            particle_info = hits_df[hits_df['particle'] == particle] 
+            particle_mag_field = particle_info[particle_info['mag_field'] == mag_field]
             #calling boxplot func 
-            hit_count_vs_event_num(particle_info, target, particle)
+            hit_count_vs_event_num(particle_mag_field, target, particle, mag_field, events=events,
+                                   events_labels=events_labels)

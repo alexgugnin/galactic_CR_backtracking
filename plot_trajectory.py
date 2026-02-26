@@ -2,7 +2,7 @@ from mpl_toolkits.mplot3d import axes3d
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from cut_visualisation import get_objects_list
+#from cut_visualisation import get_objects_list
 
 def plot2DProjection_standalone_image(data, title = '', fname = None) -> None:
     plt.ioff() # Turn off interactive mode to speed up building
@@ -220,7 +220,8 @@ def plot3D(data) -> None:
     I,X,Y,Z = data
     print(I.shape, X[I == 0].shape, np.unique(I))
     for i in np.unique(I):
-        ax.plot(X[I == i], Y[I == i], Z[I == i], lw=1, alpha=1)
+        #ax.plot(X[I == i], Y[I == i], Z[I == i], lw=1, alpha=1)
+        ax.scatter(X[I == i], Y[I == i], Z[I == i], s=1)
 
     # plot Galactic border
     r = 20
@@ -271,15 +272,16 @@ def plot3D(data) -> None:
 
 if __name__ == '__main__':
     # plot 3D
-    data_22 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_22_event_1000sims.txt', unpack=True, skip_footer=1)
-    data_23 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_23_event_1000sims.txt', unpack=True, skip_footer=1)
-    data_30 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_30_event_1000sims.txt', unpack=True, skip_footer=1)
+    #data_22 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_22_event_1000sims.txt', unpack=True, skip_footer=1)
+    #data_23 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_23_event_1000sims.txt', unpack=True, skip_footer=1)
+    #data_30 = np.genfromtxt('trajectories_data/H/traj_PA+TA_H_30_event_1000sims.txt', unpack=True, skip_footer=1)
 
-    plot_triplet(data_22=data_22, data_23=data_23, data_30=data_30, 
-                 title = "Trajectories for the Telescope Array event pair (left and middle) and Pierre Auger event (right) \n in the galactic plane for Z = 1",
-                 savename = "harvard_conference_plots/three_projections_H.jpeg")
+    #plot_triplet(data_22=data_22, data_23=data_23, data_30=data_30, 
+    #             title = "Trajectories for the Telescope Array event pair (left and middle) and Pierre Auger event (right) \n in the galactic plane for Z = 1",
+    #             savename = "harvard_conference_plots/three_projections_H.jpeg")
     #plot3D(np.genfromtxt('galactic_trajectories_with_uncert_with_random_4types.txt', unpack=True, skip_footer=1))
     #plot2DProjection_standalone_image(data_22, title = "Trajectories for the TA top event in the galactic plane for Z = 6", fname = 'paper_results/trajectories/eng_pres_traj_alpha_linewidth.jpeg')
     #plotAll2DProjections(data_22, title = "All three projections for the simulated CR with Z = 6 and random striated+turbulent field for the TA event (top)")#, fname = "Fe_comb_22event_3projections.png")
     #plotAll2DProjections(data_23, title = "All three projections for the simulated CR with Z = 26 and random striated+turbulent field for the TA event (bottom)", fname = "Fe_comb_23event_3projections.png")
     #plotAll2DProjections(data_30, title = "All three projections for the simulated CR with Z = 26 and random striated+turbulent field for the PA event", fname = "Fe_comb_30event_3projections.png")
+    plot3D(np.genfromtxt(f'trajectories_data/traj_for_hammer_init_plot/traj_PA+TA_JF12_H_2_event_1sims.txt', unpack=True, skip_footer=1))
